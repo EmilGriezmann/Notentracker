@@ -8,12 +8,15 @@ import Link from 'next/link';
 import { ChevronLeft, Plus, X, Check } from 'lucide-react';
 import SubjectCard from '@/components/SubjectCard';
 import SemesterRadar from '@/components/SemesterRadar';
+import ThemeToggle from '@/components/ThemeToggle';
 import clsx from 'clsx';
 
 function SemesterGradeRing({ grade, points }: { grade: number; points: number }) {
     const [animatedGrade, setAnimatedGrade] = useState(6.0);
     const [animatedPct, setAnimatedPct] = useState(0);
     const [showPoints, setShowPoints] = useState(false);
+    const [isPulsing, setIsPulsing] = useState(false);
+    const prevGradeRef = useRef<number | null>(null);
     const frameRef = useRef<number>(0);
 
     const targetPct = Math.max(0, Math.min(100, ((6 - grade) / 5) * 100));
@@ -24,6 +27,19 @@ function SemesterGradeRing({ grade, points }: { grade: number; points: number })
         const hue = Math.round(t * 142);
         return `hsl(${hue}, 75%, 55%)`;
     }, []);
+
+    useEffect(() => {
+        // Trigger pulse on grade change (not initial render)
+        if (prevGradeRef.current !== null && prevGradeRef.current !== grade) {
+            setIsPulsing(true);
+            const timer = setTimeout(() => setIsPulsing(false), 600);
+            return () => clearTimeout(timer);
+        }
+    }, [grade]);
+
+    useEffect(() => {
+        prevGradeRef.current = grade;
+    }, [grade]);
 
     useEffect(() => {
         const duration = 1200;
@@ -55,9 +71,12 @@ function SemesterGradeRing({ grade, points }: { grade: number; points: number })
 
     return (
         <div className="flex flex-col items-center gap-3">
-            <div className="relative w-[160px] h-[160px] flex items-center justify-center">
+            <div className={clsx(
+                "relative w-[160px] h-[160px] flex items-center justify-center",
+                isPulsing && "animate-ring-pulse"
+            )}>
                 <svg width="160" height="160" viewBox="0 0 160 160" className="absolute inset-0 -rotate-90">
-                    <circle cx="80" cy="80" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
+                    <circle cx="80" cy="80" r={radius} fill="none" stroke="var(--ring-track)" strokeWidth="7" />
                     <circle
                         cx="80" cy="80" r={radius}
                         fill="none"
@@ -67,7 +86,7 @@ function SemesterGradeRing({ grade, points }: { grade: number; points: number })
                         strokeDasharray={`${strokeDash} ${circumference}`}
                     />
                 </svg>
-                <span className="relative text-5xl font-bold text-white leading-none">
+                <span className="relative text-5xl font-bold text-[var(--color-text)] leading-none">
                     {animatedGrade.toFixed(2)}
                 </span>
             </div>
@@ -83,18 +102,8 @@ function SemesterGradeRing({ grade, points }: { grade: number; points: number })
 
 // Apple-inspired colors (12 options)
 const COLORS = [
-    '#0a84ff', // Blue
-    '#bf5af2', // Purple
-    '#ff9f0a', // Orange
-    '#ff453a', // Red
-    '#30d158', // Green
-    '#64d2ff', // Cyan
-    '#5e5ce6', // Indigo
-    '#ff375f', // Pink
-    '#ffd60a', // Yellow
-    '#ac8e68', // Brown
-    '#8e8e93', // Gray
-    '#ffffff'  // White
+    '#0a84ff', '#bf5af2', '#ff9f0a', '#ff453a', '#30d158', '#64d2ff',
+    '#5e5ce6', '#ff375f', '#ffd60a', '#ac8e68', '#8e8e93', '#ffffff'
 ];
 
 export default function SemesterPage() {
@@ -121,10 +130,8 @@ export default function SemesterPage() {
         setSemesters(list);
         const found = list.find(s => s.id === id);
         if (!found) return;
-        // Ensure sorted on load
         found.subjects = sortSubjects(found.subjects);
         setSemester(found);
-        // Default: collapsed for overview on tablet/phone
         setExpandedSubjectId(null);
     }, [id]);
 
@@ -158,7 +165,6 @@ export default function SemesterPage() {
         if (!formName.trim() || !semester) return;
 
         if (editSubjectId) {
-            // Edit Mode - Editing properties should trigger a sort
             let updatedSubjects = semester.subjects.map(s => s.id === editSubjectId ? {
                 ...s,
                 name: formName.trim(),
@@ -168,11 +174,9 @@ export default function SemesterPage() {
             } : s);
 
             updatedSubjects = sortSubjects(updatedSubjects);
-
             const updatedSem = { ...semester, subjects: updatedSubjects };
             saveCurrentSemester(updatedSem);
         } else {
-            // Create Mode - Add to TOP, do NOT sort yet (resort existing list, prepend new)
             const newSubject: Subject = {
                 id: crypto.randomUUID(),
                 name: formName.trim(),
@@ -193,32 +197,21 @@ export default function SemesterPage() {
     const updateSubjectGrades = (updatedSub: Subject) => {
         if (!semester) return;
 
-        // Update the list with the new data
         let updatedSubjects = semester.subjects.map(s => s.id === updatedSub.id ? updatedSub : s);
 
-        // RULE: Only sort if the subject we just edited was NOT the top one.
-        // This keeps the "newly added" subject (which sits at top) pinned there while we edit it.
-        // It will only be sorted when we interact with OTHER subjects (or reload/add new).
         const isTopSubject = semester.subjects.length > 0 && semester.subjects[0].id === updatedSub.id;
-
         if (!isTopSubject) {
             updatedSubjects = sortSubjects(updatedSubjects);
         }
 
-        const updatedSem = {
-            ...semester,
-            subjects: updatedSubjects
-        };
+        const updatedSem = { ...semester, subjects: updatedSubjects };
         saveCurrentSemester(updatedSem);
     };
 
     const deleteSubject = (subId: string) => {
         if (!semester) return;
         if (!confirm('Fach wirklich löschen?')) return;
-        const updatedSem = {
-            ...semester,
-            subjects: semester.subjects.filter(s => s.id !== subId)
-        };
+        const updatedSem = { ...semester, subjects: semester.subjects.filter(s => s.id !== subId) };
         saveCurrentSemester(updatedSem);
     };
 
@@ -239,39 +232,36 @@ export default function SemesterPage() {
 
             {/* Navigation */}
             <nav className="mb-8 flex justify-between items-center">
-                <Link href="/" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/[0.06] backdrop-blur-sm text-white/60 hover:text-white hover:bg-white/[0.1] transition-all duration-200 active:scale-90">
+                <Link href="/" className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--glass-bg)] backdrop-blur-sm border border-[var(--glass-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--glass-hover)] transition-all duration-200 active:scale-90">
                     <ChevronLeft size={18} />
                 </Link>
-                <button
-                    onClick={handleDeleteSemester}
-                    className="text-white/30 hover:text-danger text-xs font-medium transition-colors duration-200"
-                >
-                    Löschen
-                </button>
+                <div className="flex items-center gap-3">
+                    <ThemeToggle />
+                    <button
+                        onClick={handleDeleteSemester}
+                        className="text-[var(--color-text-muted)] hover:text-danger text-xs font-medium transition-colors duration-200"
+                    >
+                        Löschen
+                    </button>
+                </div>
             </nav>
 
             {/* Hero Header */}
             <header className="mb-12 animate-slide-up">
-
-                {/* Row 1: Title */}
                 <div className="mb-8">
-                    <span className="text-white/50 font-bold uppercase tracking-widest text-xs mb-2 block">Semester</span>
-                    <h1 className="text-5xl font-extrabold text-white tracking-tight">{semester.name}</h1>
+                    <span className="text-[var(--color-text-muted)] font-bold uppercase tracking-widest text-xs mb-2 block">Semester</span>
+                    <h1 className="text-5xl font-extrabold text-[var(--color-text)] tracking-tight">{semester.name}</h1>
                 </div>
 
-                {/* Row 2: Stats & Chart */}
                 <div className="grid md:grid-cols-2 gap-6 items-stretch">
-
-                    {/* Average Card */}
                     {avgPoints !== null && avgGrade !== null && (
-                        <div className="bg-white/[0.06] backdrop-blur-xl p-6 rounded-3xl border border-white/[0.08] shadow-2xl flex flex-col justify-center items-center text-center min-h-[165px]">
+                        <div className="bg-[var(--glass-bg)] backdrop-blur-xl p-6 rounded-3xl border border-[var(--glass-border)] shadow-2xl flex flex-col justify-center items-center text-center min-h-[165px]">
                             <SemesterGradeRing grade={avgGrade} points={avgPoints} />
                         </div>
                     )}
 
-                    {/* Radar Chart */}
                     {(semester.subjects.length > 0) && (
-                        <div className="bg-white/[0.06] backdrop-blur-xl rounded-3xl border border-white/[0.08] shadow-2xl min-h-[225px] flex items-center justify-center">
+                        <div className="bg-[var(--glass-bg)] backdrop-blur-xl rounded-3xl border border-[var(--glass-border)] shadow-2xl min-h-[225px] flex items-center justify-center">
                             <SemesterRadar subjects={semester.subjects} />
                         </div>
                     )}
@@ -298,8 +288,8 @@ export default function SemesterPage() {
                     </div>
                 ))}
                 {semester.subjects.length === 0 && (
-                    <div className="text-center py-12 px-6 rounded-3xl border border-white/5 bg-white/[0.02]">
-                        <p className="text-text-muted">Noch keine Fächer eingetragen.</p>
+                    <div className="text-center py-12 px-6 rounded-3xl border border-[var(--glass-border)] bg-[var(--glass-bg)]">
+                        <p className="text-[var(--color-text-muted)]">Noch keine Fächer eingetragen.</p>
                     </div>
                 )}
             </div>
@@ -307,7 +297,7 @@ export default function SemesterPage() {
             {/* Add Button */}
             <button
                 onClick={openAddModal}
-                className="w-full mt-8 mb-8 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] hover:bg-white/[0.08] text-text-muted hover:text-white py-3 rounded-2xl transition-all flex justify-center items-center gap-2 text-sm font-medium active:scale-[0.98]"
+                className="w-full mt-8 mb-8 bg-[var(--glass-bg)] backdrop-blur-sm border border-[var(--glass-border)] hover:bg-[var(--glass-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] py-3 rounded-2xl transition-all flex justify-center items-center gap-2 text-sm font-medium active:scale-[0.98]"
             >
                 <Plus size={16} strokeWidth={2.5} />
                 Fach hinzufügen
@@ -316,21 +306,21 @@ export default function SemesterPage() {
             {/* Modal Overlay */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xl animate-fade-in">
-                    <div className="bg-white/[0.08] backdrop-blur-2xl border border-white/[0.1] p-6 rounded-3xl shadow-2xl w-full max-w-md animate-scale-in relative">
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-text-muted hover:text-white">
+                    <div className="bg-[var(--glass-bg)] backdrop-blur-2xl border border-[var(--glass-border)] p-6 rounded-3xl shadow-2xl w-full max-w-md animate-scale-in relative" style={{ backgroundColor: 'var(--color-surface)' }}>
+                        <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                             <X size={20} />
                         </button>
-                        <h3 className="text-xl font-bold text-white mb-6">
+                        <h3 className="text-xl font-bold text-[var(--color-text)] mb-6">
                             {editSubjectId ? 'Fach bearbeiten' : 'Neues Fach'}
                         </h3>
                         <form onSubmit={handleSaveSubject} className="space-y-6">
                             <div>
-                                <label className="block text-xs font-bold text-text-muted uppercase mb-2">Fachname</label>
+                                <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-2">Fachname</label>
                                 <input
                                     type="text"
                                     value={formName}
                                     onChange={e => setFormName(e.target.value)}
-                                    className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                                    className="w-full bg-[var(--input-bg)] border border-[var(--glass-border)] rounded-xl px-4 py-3 text-[var(--color-text)] focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                                     placeholder="z.B. Englisch"
                                     autoFocus
                                 />
@@ -338,30 +328,30 @@ export default function SemesterPage() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-text-muted uppercase mb-2">Kursart</label>
-                                    <div className="flex bg-black/30 p-1 rounded-xl">
-                                        <button type="button" onClick={() => setFormType('GK')} className={clsx("flex-1 py-2 rounded-lg text-xs font-bold transition-all", formType === 'GK' ? 'bg-surface-highlight text-white shadow-lg' : 'text-text-muted hover:text-white')}>GK</button>
-                                        <button type="button" onClick={() => setFormType('LK')} className={clsx("flex-1 py-2 rounded-lg text-xs font-bold transition-all", formType === 'LK' ? 'bg-primary text-white shadow-lg' : 'text-text-muted hover:text-white')}>LK</button>
+                                    <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-2">Kursart</label>
+                                    <div className="flex bg-[var(--input-bg)] p-1 rounded-xl">
+                                        <button type="button" onClick={() => setFormType('GK')} className={clsx("flex-1 py-2 rounded-lg text-xs font-bold transition-all", formType === 'GK' ? 'bg-[var(--color-surface-highlight)] text-[var(--color-text)] shadow-lg' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]')}>GK</button>
+                                        <button type="button" onClick={() => setFormType('LK')} className={clsx("flex-1 py-2 rounded-lg text-xs font-bold transition-all", formType === 'LK' ? 'bg-primary text-white shadow-lg' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]')}>LK</button>
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-text-muted uppercase mb-2">Bewertung</label>
-                                    <div className="flex bg-black/30 p-1 rounded-xl">
-                                        <button type="button" onClick={() => setFormAssess('WRITTEN')} className={clsx("flex-1 py-2 rounded-lg text-xs font-bold transition-all", formAssess === 'WRITTEN' ? 'bg-surface-highlight text-white shadow-lg' : 'text-text-muted hover:text-white')}>Schriftlich</button>
-                                        <button type="button" onClick={() => setFormAssess('ORAL')} className={clsx("flex-1 py-2 rounded-lg text-xs font-bold transition-all", formAssess === 'ORAL' ? 'bg-surface-highlight text-white shadow-lg' : 'text-text-muted hover:text-white')}>Mündlich</button>
+                                    <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-2">Bewertung</label>
+                                    <div className="flex bg-[var(--input-bg)] p-1 rounded-xl">
+                                        <button type="button" onClick={() => setFormAssess('WRITTEN')} className={clsx("flex-1 py-2 rounded-lg text-xs font-bold transition-all", formAssess === 'WRITTEN' ? 'bg-[var(--color-surface-highlight)] text-[var(--color-text)] shadow-lg' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]')}>Schriftlich</button>
+                                        <button type="button" onClick={() => setFormAssess('ORAL')} className={clsx("flex-1 py-2 rounded-lg text-xs font-bold transition-all", formAssess === 'ORAL' ? 'bg-[var(--color-surface-highlight)] text-[var(--color-text)] shadow-lg' : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]')}>Mündlich</button>
                                     </div>
                                 </div>
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-text-muted uppercase mb-2">Farbe</label>
+                                <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-2">Farbe</label>
                                 <div className="grid grid-cols-6 gap-3">
                                     {COLORS.map(c => (
                                         <button
                                             key={c}
                                             type="button"
                                             onClick={() => setFormColor(c)}
-                                            className={clsx("w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all mx-auto", formColor === c ? "border-white scale-110" : "border-transparent opacity-50 hover:opacity-100")}
+                                            className={clsx("w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all mx-auto", formColor === c ? "border-[var(--color-text)] scale-110" : "border-transparent opacity-50 hover:opacity-100")}
                                             style={{ backgroundColor: c }}
                                         >
                                             {formColor === c && <Check size={14} className={c === '#ffffff' ? 'text-black' : 'text-white'} />}
@@ -370,7 +360,7 @@ export default function SemesterPage() {
                                 </div>
                             </div>
 
-                            <button type="submit" className="w-full bg-white text-black hover:bg-white/90 py-3 rounded-xl font-bold transition-all transform active:scale-[0.98]">
+                            <button type="submit" className="w-full bg-primary text-white hover:bg-primary/90 py-3 rounded-xl font-bold transition-all transform active:scale-[0.98]">
                                 Speichern
                             </button>
 
