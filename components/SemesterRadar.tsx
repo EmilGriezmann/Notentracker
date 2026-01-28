@@ -1,6 +1,6 @@
 'use client';
 
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { Subject } from '@/types';
 import { calculateSubjectAverage } from '@/lib/store';
 
@@ -14,48 +14,59 @@ export default function SemesterRadar({ subjects }: Props) {
         return {
             name: s.name,
             avg: avg !== null ? Math.round(avg) : null,
-            color: s.color || '#fff'
         };
     }).filter(d => d.avg !== null);
 
     if (subjectData.length === 0) return null;
 
-    const allPoints = subjectData.map(d => d.avg as number);
-    const maxPoint = Math.max(...allPoints);
-    const minPoint = Math.min(...allPoints);
+    // Count how many subjects achieved each point value
+    const countMap: Record<number, number> = {};
+    subjectData.forEach(d => {
+        const p = d.avg as number;
+        countMap[p] = (countMap[p] || 0) + 1;
+    });
 
-    const chartData = [];
-    for (let p = maxPoint; p >= minPoint; p--) {
-        const matchingSubjects = subjectData.filter(d => d.avg === p);
-        chartData.push({
-            point: `${p}`,
-            count: matchingSubjects.length,
-            fullMark: subjects.length,
-            subjects: matchingSubjects.map(s => s.name).join(', ')
-        });
-    }
+    // Only include achieved grade points, sorted ascending
+    const chartData = Object.keys(countMap)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map(p => ({
+            points: p,
+            count: countMap[p],
+        }));
+
+    const maxCount = Math.max(...chartData.map(d => d.count));
 
     return (
         <div className="w-full h-full min-h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                    <PolarGrid stroke="#ffffff20" />
-                    <PolarAngleAxis
-                        dataKey="point"
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+                    <XAxis
+                        dataKey="points"
                         tick={{ fill: '#888', fontSize: 12, fontWeight: 600 }}
-                        tickSize={5}
+                        axisLine={{ stroke: '#ffffff20' }}
+                        tickLine={false}
                     />
-                    <PolarRadiusAxis domain={[0, 'auto']} tick={false} axisLine={false} />
-                    <Radar
-                        name="Anzahl"
-                        dataKey="count"
-                        stroke="#0a84ff"
-                        strokeWidth={3}
-                        fill="#0a84ff"
-                        fillOpacity={0.5}
-                        isAnimationActive={true}
+                    <YAxis
+                        allowDecimals={false}
+                        domain={[0, maxCount + 1]}
+                        tick={{ fill: '#888', fontSize: 12, fontWeight: 600 }}
+                        axisLine={false}
+                        tickLine={false}
                     />
-                </RadarChart>
+                    <Tooltip
+                        contentStyle={{ backgroundColor: '#1c1c1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 13 }}
+                        labelFormatter={(v) => `${v} Punkte`}
+                        formatter={(value: number) => [`${value} Fächer`, 'Anzahl']}
+                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                    />
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]} isAnimationActive={true}>
+                        {chartData.map((_, i) => (
+                            <Cell key={i} fill="#0a84ff" fillOpacity={0.8} />
+                        ))}
+                    </Bar>
+                </BarChart>
             </ResponsiveContainer>
         </div>
     );

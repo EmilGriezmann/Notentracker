@@ -18,6 +18,11 @@ export interface Subject {
     type: SubjectType;
     assessmentType: SubjectAssessmentType;
     quarters: Quarter[];
+    /**
+     * Optional "Zeugnisnote"/Endnote override (0-15 points).
+     * If set, averages should use this value instead of calculating from quarters.
+     */
+    finalOverride?: GradePoints;
     color?: string;
 }
 

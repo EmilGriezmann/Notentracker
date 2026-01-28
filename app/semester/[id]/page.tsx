@@ -33,6 +33,7 @@ export default function SemesterPage() {
 
     const [semesters, setSemesters] = useState<Semester[]>([]);
     const [semester, setSemester] = useState<Semester | null>(null);
+    const [expandedSubjectId, setExpandedSubjectId] = useState<string | null>(null);
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,6 +53,8 @@ export default function SemesterPage() {
         // Ensure sorted on load
         found.subjects = sortSubjects(found.subjects);
         setSemester(found);
+        // Default: collapsed for overview on tablet/phone
+        setExpandedSubjectId(null);
     }, [id]);
 
     const saveCurrentSemester = (updatedSem: Semester) => {
@@ -222,13 +225,20 @@ export default function SemesterPage() {
             </button>
 
             {/* Subjects List */}
-            <div className="grid gap-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <div
+                className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-up"
+                style={{ animationDelay: '0.1s' }}
+            >
                 {semester.subjects.map(sub => (
                     <div key={sub.id} className="relative group animate-slide-up">
                         <SubjectCard
                             subject={sub}
                             onChange={updateSubjectGrades}
                             onDelete={() => deleteSubject(sub.id)}
+                            isExpanded={expandedSubjectId === sub.id}
+                            onToggleExpand={() =>
+                                setExpandedSubjectId(prev => (prev === sub.id ? null : sub.id))
+                            }
                         />
                         <button
                             onClick={() => openEditModal(sub)}

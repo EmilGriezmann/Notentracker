@@ -14,6 +14,11 @@ export const saveSemesters = (semesters: Semester[]) => {
 };
 
 export const calculateSubjectAverage = (subject: Subject): number | null => {
+    // If a final "Zeugnisnote" override exists, it always wins.
+    if (typeof subject.finalOverride === 'number') {
+        return subject.finalOverride;
+    }
+
     let totalPoints = 0;
     let count = 0;
 
