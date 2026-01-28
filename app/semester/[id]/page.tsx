@@ -5,7 +5,7 @@ import { loadSemesters, saveSemesters, calculateSemesterAverage, pointsToGrade, 
 import { Semester, Subject } from '@/types';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Plus, X, Check, Edit2 } from 'lucide-react';
+import { ChevronLeft, Plus, X, Check } from 'lucide-react';
 import SubjectCard from '@/components/SubjectCard';
 import SemesterRadar from '@/components/SemesterRadar';
 import clsx from 'clsx';
@@ -206,23 +206,12 @@ export default function SemesterPage() {
 
                     {/* Radar Chart */}
                     {(semester.subjects.length > 0) && (
-                        <div className="bg-gradient-to-br from-surface to-surface-highlight p-4 rounded-3xl border border-white/5 shadow-2xl flex justify-center items-center min-h-[300px]">
+                        <div className="bg-gradient-to-br from-surface to-surface-highlight rounded-3xl border border-white/5 shadow-2xl min-h-[300px]">
                             <SemesterRadar subjects={semester.subjects} />
                         </div>
                     )}
                 </div>
             </header>
-
-            {/* Add Button */}
-            <button
-                onClick={openAddModal}
-                className="w-full mb-8 bg-surface/50 border border-dashed border-white/10 hover:border-primary/50 text-text-muted hover:text-white py-4 rounded-xl transition-all flex justify-center items-center gap-2 font-semibold group animate-fade-in"
-            >
-                <div className="bg-white/10 p-1 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
-                    <Plus size={18} />
-                </div>
-                Fach hinzufügen
-            </button>
 
             {/* Subjects List */}
             <div
@@ -230,23 +219,17 @@ export default function SemesterPage() {
                 style={{ animationDelay: '0.1s' }}
             >
                 {semester.subjects.map(sub => (
-                    <div key={sub.id} className="relative group animate-slide-up">
+                    <div key={sub.id} className="animate-slide-up">
                         <SubjectCard
                             subject={sub}
                             onChange={updateSubjectGrades}
                             onDelete={() => deleteSubject(sub.id)}
+                            onEdit={() => openEditModal(sub)}
                             isExpanded={expandedSubjectId === sub.id}
                             onToggleExpand={() =>
                                 setExpandedSubjectId(prev => (prev === sub.id ? null : sub.id))
                             }
                         />
-                        <button
-                            onClick={() => openEditModal(sub)}
-                            className="absolute top-3 right-12 text-text-muted hover:text-white p-2 transition-colors opacity-0 group-hover:opacity-100 bg-black/50 rounded-full backdrop-blur-md"
-                            title="Bearbeiten"
-                        >
-                            <Edit2 size={14} />
-                        </button>
                     </div>
                 ))}
                 {semester.subjects.length === 0 && (
@@ -255,6 +238,17 @@ export default function SemesterPage() {
                     </div>
                 )}
             </div>
+
+            {/* Add Button */}
+            <button
+                onClick={openAddModal}
+                className="w-full mt-8 mb-8 bg-surface/50 border border-dashed border-white/10 hover:border-primary/50 text-text-muted hover:text-white py-4 rounded-xl transition-all flex justify-center items-center gap-2 font-semibold group animate-fade-in"
+            >
+                <div className="bg-white/10 p-1 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
+                    <Plus size={18} />
+                </div>
+                Fach hinzufügen
+            </button>
 
             {/* Modal Overlay */}
             {isModalOpen && (

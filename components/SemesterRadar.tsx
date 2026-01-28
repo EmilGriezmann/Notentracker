@@ -38,9 +38,9 @@ export default function SemesterRadar({ subjects }: Props) {
     const maxCount = Math.max(...chartData.map(d => d.count));
 
     return (
-        <div className="w-full h-full min-h-[250px]">
+        <div className="w-full h-full min-h-[250px] p-4">
             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 5 }}>
+                <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
                     <XAxis
                         dataKey="points"

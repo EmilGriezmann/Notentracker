@@ -4,17 +4,18 @@ import { useState, useEffect } from 'react';
 import { calculateSubjectAverage } from '@/lib/store';
 import { Subject } from '@/types';
 import clsx from 'clsx';
-import { ChevronDown, Trash2 } from 'lucide-react';
+import { ChevronDown, Trash2, Edit2 } from 'lucide-react';
 
 interface Props {
     subject: Subject;
     onChange: (updated: Subject) => void;
     onDelete: () => void;
+    onEdit: () => void;
     isExpanded: boolean;
     onToggleExpand: () => void;
 }
 
-export default function SubjectCard({ subject, onChange, onDelete, isExpanded, onToggleExpand }: Props) {
+export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExpanded, onToggleExpand }: Props) {
     // We need local state for inputs to prevent "Jumping" during edit.
     // The props 'subject' will be updated only on blur, which causes the sort/reorder.
     const [localQuarters, setLocalQuarters] = useState(subject.quarters);
@@ -162,6 +163,14 @@ export default function SubjectCard({ subject, onChange, onDelete, isExpanded, o
                         aria-expanded={isExpanded}
                     >
                         <ChevronDown size={16} />
+                    </button>
+
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                        className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-text-muted hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
+                        title="Bearbeiten"
+                    >
+                        <Edit2 size={14} />
                     </button>
 
                     <button
