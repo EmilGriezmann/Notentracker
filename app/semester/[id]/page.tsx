@@ -195,18 +195,18 @@ export default function SemesterPage() {
 
                     {/* Average Card */}
                     {avgPoints !== null && (
-                        <div className="bg-gradient-to-br from-surface to-surface-highlight p-6 rounded-3xl border border-white/5 shadow-2xl flex flex-col justify-center items-center text-center min-h-[300px]">
+                        <div className="bg-gradient-to-br from-surface to-surface-highlight p-6 rounded-3xl border border-white/5 shadow-2xl flex flex-col justify-center items-center text-center min-h-[165px]">
                             <div className="text-sm text-text-muted font-bold uppercase tracking-wider mb-3">Durchschnitt</div>
                             <div className="text-7xl font-black text-white leading-none tracking-tighter mb-4 scale-110">
                                 {avgGrade ? avgGrade.toFixed(2) : '-'}
                             </div>
-                            <div className="text-xl font-mono text-primary font-bold bg-primary/10 px-4 py-1 rounded-full">{avgPoints.toFixed(2)} MSS</div>
+                            <div className="text-xl font-mono text-primary font-bold bg-primary/10 px-4 py-1 rounded-full">{avgPoints.toFixed(2)}</div>
                         </div>
                     )}
 
                     {/* Radar Chart */}
                     {(semester.subjects.length > 0) && (
-                        <div className="bg-gradient-to-br from-surface to-surface-highlight rounded-3xl border border-white/5 shadow-2xl min-h-[300px]">
+                        <div className="bg-gradient-to-br from-surface to-surface-highlight rounded-3xl border border-white/5 shadow-2xl min-h-[225px] flex items-center justify-center">
                             <SemesterRadar subjects={semester.subjects} />
                         </div>
                     )}
@@ -310,6 +310,19 @@ export default function SemesterPage() {
                             <button type="submit" className="w-full bg-white text-black hover:bg-white/90 py-3 rounded-xl font-bold transition-all transform active:scale-[0.98]">
                                 Speichern
                             </button>
+
+                            {editSubjectId && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        deleteSubject(editSubjectId);
+                                        setIsModalOpen(false);
+                                    }}
+                                    className="w-full bg-danger/10 text-danger hover:bg-danger/20 py-3 rounded-xl font-bold transition-all transform active:scale-[0.98]"
+                                >
+                                    Fach löschen
+                                </button>
+                            )}
                         </form>
                     </div>
                 </div>

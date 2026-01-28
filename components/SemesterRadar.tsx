@@ -1,6 +1,6 @@
 'use client';
 
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, Tooltip } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
 import { Subject } from '@/types';
 import { calculateSubjectAverage } from '@/lib/store';
 
@@ -38,9 +38,9 @@ export default function SemesterRadar({ subjects }: Props) {
     const maxCount = Math.max(...chartData.map(d => d.count));
 
     return (
-        <div className="w-full h-full min-h-[250px] p-4">
+        <div className="w-full h-full min-h-[225px] pt-8 pb-4 px-4 pointer-events-none select-none">
             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
                     <XAxis
                         dataKey="points"
@@ -49,21 +49,16 @@ export default function SemesterRadar({ subjects }: Props) {
                         tickLine={false}
                     />
                     <YAxis
+                        width={20}
                         allowDecimals={false}
                         domain={[0, maxCount + 1]}
                         tick={{ fill: '#888', fontSize: 12, fontWeight: 600 }}
                         axisLine={false}
                         tickLine={false}
                     />
-                    <Tooltip
-                        contentStyle={{ backgroundColor: '#1c1c1e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 13 }}
-                        labelFormatter={(v) => `${v} Punkte`}
-                        formatter={(value: number) => [`${value} Fächer`, 'Anzahl']}
-                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                    />
-                    <Bar dataKey="count" radius={[6, 6, 0, 0]} isAnimationActive={true}>
+                    <Bar dataKey="count" radius={[6, 6, 0, 0]} isAnimationActive={false}>
                         {chartData.map((_, i) => (
-                            <Cell key={i} fill="#0a84ff" fillOpacity={0.8} />
+                            <Cell key={i} fill="#ffffff" fillOpacity={0.85} />
                         ))}
                     </Bar>
                 </BarChart>

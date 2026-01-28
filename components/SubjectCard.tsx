@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { calculateSubjectAverage } from '@/lib/store';
 import { Subject } from '@/types';
 import clsx from 'clsx';
-import { ChevronDown, Trash2, Edit2 } from 'lucide-react';
+import { ChevronDown, Edit2 } from 'lucide-react';
 
 interface Props {
     subject: Subject;
@@ -82,11 +82,11 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
                 "group bg-surface/80 backdrop-blur-sm rounded-xl overflow-hidden border border-white/5 transition-all hover:bg-surface-highlight",
                 isExpanded && "ring-1 ring-white/10"
             )}
-            style={{ borderColor: subject.color ? `${subject.color}40` : undefined }}
+            style={{}}
         >
 
             {/* Header Row */}
-            <div className="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between relative overflow-hidden">
+            <div className="px-3 sm:px-4 py-4 sm:py-5 flex items-center justify-between relative overflow-hidden">
                 {subject.color && (
                     <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: subject.color }} />
                 )}
@@ -98,58 +98,54 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
                     >
                         {subject.type}
                     </div>
-                    <div>
-                        <h3 className="font-semibold text-white tracking-wide">{subject.name}</h3>
-                        <p className="text-[11px] text-text-muted font-medium uppercase tracking-wider">
-                            {subject.assessmentType === 'WRITTEN' ? 'Schriftlich' : 'Mündlich'}
-                        </p>
-                    </div>
+                    <h3 className="font-semibold text-white tracking-wide">{subject.name}</h3>
                 </div>
 
                 <div className="flex items-center gap-2.5 sm:gap-3">
-                    {roundedPoints !== null ? (
-                        <div className="flex items-center gap-2 text-right">
-                            <div className="text-base sm:text-lg font-bold text-white tabular-nums">
-                                {roundedPoints} {/* always whole points */}
-                            </div>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                        className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-text-muted hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
+                        title="Bearbeiten"
+                    >
+                        <Edit2 size={14} />
+                    </button>
 
-                            <div className="flex items-center gap-1">
-                                {isEditingOverride ? (
-                                    <input
-                                        autoFocus
-                                        type="number"
-                                        min="0"
-                                        max="15"
-                                        step="1"
-                                        value={overrideInput}
-                                        onChange={(e) => setOverrideInput(e.target.value)}
-                                        onBlur={commitOverride}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.preventDefault();
-                                                commitOverride();
-                                            }
-                                            if (e.key === 'Escape') {
-                                                setIsEditingOverride(false);
-                                                setOverrideInput(subject.finalOverride !== undefined ? String(subject.finalOverride) : '');
-                                            }
-                                        }}
-                                        className="w-14 bg-black/40 border border-white/10 rounded-md px-2 py-1 text-center text-sm text-white outline-none focus:border-primary/60"
-                                        placeholder="–"
-                                    />
-                                ) : (
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setIsEditingOverride(true); }}
-                                        className="text-[11px] font-semibold text-text-muted bg-white/5 hover:bg-white/10 px-2 py-1 rounded-md border border-transparent hover:border-white/10 transition-colors tabular-nums"
-                                        title="Zeugnisnote überschreiben (0-15 Punkte)"
-                                    >
-                                        {subject.finalOverride !== undefined ? subject.finalOverride : '—'}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
+                    {isEditingOverride ? (
+                        <input
+                            autoFocus
+                            type="number"
+                            min="0"
+                            max="15"
+                            step="1"
+                            value={overrideInput}
+                            onChange={(e) => setOverrideInput(e.target.value)}
+                            onBlur={commitOverride}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    commitOverride();
+                                }
+                                if (e.key === 'Escape') {
+                                    setIsEditingOverride(false);
+                                    setOverrideInput(subject.finalOverride !== undefined ? String(subject.finalOverride) : '');
+                                }
+                            }}
+                            className="w-14 bg-black/40 border border-white/10 rounded-md px-2 py-1 text-center text-base sm:text-lg font-bold text-white outline-none focus:border-primary/60"
+                            placeholder="–"
+                        />
                     ) : (
-                        <div className="text-white/20 text-sm">—</div>
+                        <button
+                            onClick={(e) => { e.stopPropagation(); setIsEditingOverride(true); }}
+                            className={clsx(
+                                "text-base sm:text-lg font-bold tabular-nums px-2 py-1 rounded-md transition-colors",
+                                subject.finalOverride !== undefined
+                                    ? "text-primary"
+                                    : "text-white"
+                            )}
+                            title="Zeugnisnote überschreiben (0-15 Punkte)"
+                        >
+                            {roundedPoints !== null ? roundedPoints : '—'}
+                        </button>
                     )}
 
                     <button
@@ -163,22 +159,6 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
                         aria-expanded={isExpanded}
                     >
                         <ChevronDown size={16} />
-                    </button>
-
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                        className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-text-muted hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
-                        title="Bearbeiten"
-                    >
-                        <Edit2 size={14} />
-                    </button>
-
-                    <button
-                        onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                        className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-text-muted hover:bg-danger hover:text-white transition-all opacity-0 group-hover:opacity-100"
-                        title="Entfernen"
-                    >
-                        <Trash2 size={14} />
                     </button>
                 </div>
             </div>
