@@ -14,7 +14,7 @@ export default function SemesterCard({ semester }: Props) {
 
     return (
         <Link href={`/semester/${semester.id}`}>
-            <div className="relative group overflow-hidden rounded-[22px] bg-surface/80 backdrop-blur-md border border-white/5 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:bg-surface-highlight cursor-pointer shadow-lg shadow-black/50">
+            <div className="relative group overflow-hidden rounded-[22px] bg-white/[0.06] backdrop-blur-xl border border-white/[0.08] transition-all duration-300 ease-spring hover:scale-[1.02] active:scale-[0.98] hover:bg-white/[0.09] cursor-pointer shadow-lg shadow-black/50">
 
                 {/* Apple Wallet-style Header gradient hint */}
                 <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
