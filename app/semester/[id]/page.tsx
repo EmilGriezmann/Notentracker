@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { loadSemesters, saveSemesters, calculateSemesterAverage, pointsToGrade, sortSubjects } from '@/lib/store';
 import { Semester, Subject } from '@/types';
 import { useParams, useRouter } from 'next/navigation';
@@ -9,6 +9,77 @@ import { ChevronLeft, Plus, X, Check } from 'lucide-react';
 import SubjectCard from '@/components/SubjectCard';
 import SemesterRadar from '@/components/SemesterRadar';
 import clsx from 'clsx';
+
+function SemesterGradeRing({ grade, points }: { grade: number; points: number }) {
+    const [animatedGrade, setAnimatedGrade] = useState(6.0);
+    const [animatedPct, setAnimatedPct] = useState(0);
+    const [showPoints, setShowPoints] = useState(false);
+    const frameRef = useRef<number>(0);
+
+    const targetPct = Math.max(0, Math.min(100, ((6 - grade) / 5) * 100));
+
+    const getColor = useCallback((g: number) => {
+        if (g >= 4.0) return '#ff453a';
+        const t = Math.max(0, Math.min(1, (4.0 - g) / 3.0));
+        const hue = Math.round(t * 142);
+        return `hsl(${hue}, 75%, 55%)`;
+    }, []);
+
+    useEffect(() => {
+        const duration = 1200;
+        const startTime = performance.now();
+
+        const animate = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+
+            setAnimatedGrade(6.0 + (grade - 6.0) * eased);
+            setAnimatedPct(targetPct * eased);
+
+            if (progress < 1) {
+                frameRef.current = requestAnimationFrame(animate);
+            } else {
+                setShowPoints(true);
+            }
+        };
+
+        frameRef.current = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(frameRef.current);
+    }, [grade, targetPct]);
+
+    const radius = 70;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDash = (animatedPct / 100) * circumference;
+    const ringColor = getColor(animatedGrade);
+
+    return (
+        <div className="flex flex-col items-center gap-3">
+            <div className="relative w-[160px] h-[160px] flex items-center justify-center">
+                <svg width="160" height="160" viewBox="0 0 160 160" className="absolute inset-0 -rotate-90">
+                    <circle cx="80" cy="80" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="7" />
+                    <circle
+                        cx="80" cy="80" r={radius}
+                        fill="none"
+                        stroke={ringColor}
+                        strokeWidth="7"
+                        strokeLinecap="round"
+                        strokeDasharray={`${strokeDash} ${circumference}`}
+                    />
+                </svg>
+                <span className="relative text-5xl font-bold text-white leading-none">
+                    {animatedGrade.toFixed(2)}
+                </span>
+            </div>
+            <div className={clsx(
+                "text-sm font-mono text-primary font-bold bg-primary/10 px-4 py-1 rounded-full transition-opacity duration-500",
+                showPoints ? "opacity-100" : "opacity-0"
+            )}>
+                {points.toFixed(2)}
+            </div>
+        </div>
+    );
+}
 
 // Apple-inspired colors (12 options)
 const COLORS = [
@@ -192,13 +263,9 @@ export default function SemesterPage() {
                 <div className="grid md:grid-cols-2 gap-6 items-stretch">
 
                     {/* Average Card */}
-                    {avgPoints !== null && (
+                    {avgPoints !== null && avgGrade !== null && (
                         <div className="bg-white/[0.06] backdrop-blur-xl p-6 rounded-3xl border border-white/[0.08] shadow-2xl flex flex-col justify-center items-center text-center min-h-[165px]">
-                            <div className="text-sm text-text-muted font-bold uppercase tracking-wider mb-3">Durchschnitt</div>
-                            <div className="text-7xl font-black text-white leading-none tracking-tighter mb-4 scale-110">
-                                {avgGrade ? avgGrade.toFixed(2) : '-'}
-                            </div>
-                            <div className="text-xl font-mono text-primary font-bold bg-primary/10 px-4 py-1 rounded-full">{avgPoints.toFixed(2)}</div>
+                            <SemesterGradeRing grade={avgGrade} points={avgPoints} />
                         </div>
                     )}
 

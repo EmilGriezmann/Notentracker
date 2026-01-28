@@ -1,10 +1,73 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { loadSemesters, saveSemesters, calculateTotalAverage, pointsToGrade } from '@/lib/store';
 import { Semester } from '@/types';
 import SemesterCard from '@/components/SemesterCard';
 import { Plus } from 'lucide-react';
+
+function GradeRing({ grade }: { grade: number }) {
+    const [animatedGrade, setAnimatedGrade] = useState(6.0);
+    const [animatedPct, setAnimatedPct] = useState(0);
+    const frameRef = useRef<number>(0);
+
+    const targetPct = Math.max(0, Math.min(100, ((6 - grade) / 5) * 100));
+
+    const getColor = useCallback((g: number) => {
+        if (g >= 4.0) return '#ff453a';
+        const t = Math.max(0, Math.min(1, (4.0 - g) / 3.0));
+        const hue = Math.round(t * 142);
+        return `hsl(${hue}, 75%, 55%)`;
+    }, []);
+
+    useEffect(() => {
+        const duration = 1200;
+        const startTime = performance.now();
+        const startGrade = 6.0;
+        const startPct = 0;
+
+        const animate = (now: number) => {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            // Ease out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
+
+            setAnimatedGrade(startGrade + (grade - startGrade) * eased);
+            setAnimatedPct(startPct + (targetPct - startPct) * eased);
+
+            if (progress < 1) {
+                frameRef.current = requestAnimationFrame(animate);
+            }
+        };
+
+        frameRef.current = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(frameRef.current);
+    }, [grade, targetPct]);
+
+    const radius = 38;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDash = (animatedPct / 100) * circumference;
+    const ringColor = getColor(animatedGrade);
+
+    return (
+        <div className="relative w-[88px] h-[88px] flex items-center justify-center">
+            <svg width="88" height="88" viewBox="0 0 88 88" className="absolute inset-0 -rotate-90">
+                <circle cx="44" cy="44" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+                <circle
+                    cx="44" cy="44" r={radius}
+                    fill="none"
+                    stroke={ringColor}
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeDasharray={`${strokeDash} ${circumference}`}
+                />
+            </svg>
+            <span className="relative text-xl font-bold text-white leading-none">
+                {animatedGrade.toFixed(1)}
+            </span>
+        </div>
+    );
+}
 
 export default function Home() {
     const [semesters, setSemesters] = useState<Semester[]>([]);
@@ -47,40 +110,9 @@ export default function Home() {
                 <div className="flex items-center gap-5">
                     <h1 className="text-5xl font-bold tracking-tight text-white">Noten</h1>
 
-                    {totalAvgGrade !== null && totalAvgPoints !== null && (() => {
-                        // Map grade: 4.0+ = red, 1.0–4.0 smooth transition red→green
-                        const pct = Math.max(0, Math.min(100, ((6 - totalAvgGrade) / 5) * 100));
-                        let ringColor: string;
-                        if (totalAvgGrade >= 4.0) {
-                            ringColor = '#ff453a';
-                        } else {
-                            // 4.0 → 0° (red), 1.0 → 142° (green)
-                            const t = Math.max(0, Math.min(1, (4.0 - totalAvgGrade) / 3.0));
-                            const hue = Math.round(t * 142);
-                            ringColor = `hsl(${hue}, 75%, 55%)`;
-                        }
-                        const radius = 38;
-                        const circumference = 2 * Math.PI * radius;
-                        const strokeDash = (pct / 100) * circumference;
-
-                        return (
-                            <div className="relative w-[88px] h-[88px] flex items-center justify-center">
-                                <svg width="88" height="88" viewBox="0 0 88 88" className="absolute inset-0 -rotate-90">
-                                    <circle cx="44" cy="44" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
-                                    <circle
-                                        cx="44" cy="44" r={radius}
-                                        fill="none"
-                                        stroke={ringColor}
-                                        strokeWidth="5"
-                                        strokeLinecap="round"
-                                        strokeDasharray={`${strokeDash} ${circumference}`}
-                                        style={{ transition: 'stroke-dasharray 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
-                                    />
-                                </svg>
-                                <span className="relative text-xl font-bold text-white leading-none">{totalAvgGrade.toFixed(1)}</span>
-                            </div>
-                        );
-                    })()}
+                    {totalAvgGrade !== null && totalAvgPoints !== null && (
+                        <GradeRing grade={totalAvgGrade} />
+                    )}
                 </div>
             </header>
 

@@ -79,7 +79,7 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
     return (
         <div
             className={clsx(
-                "group bg-white/[0.06] backdrop-blur-xl rounded-2xl overflow-hidden border border-white/[0.08] transition-all duration-300 ease-spring hover:bg-white/[0.09] active:scale-[0.98]",
+                "group bg-white/[0.06] backdrop-blur-xl rounded-2xl overflow-hidden border border-white/[0.08] transition-all duration-300 ease-spring hover:bg-white/[0.09]",
                 isExpanded && "ring-1 ring-white/[0.12]"
             )}
         >
@@ -147,7 +147,7 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
                         className={clsx(
-                            "w-8 h-8 flex items-center justify-center rounded-full text-white/40 hover:text-white/80 transition-all duration-300 ease-spring active:scale-90",
+                            "w-12 h-12 flex items-center justify-center rounded-full text-white/40 hover:text-white/80 transition-all duration-300 ease-spring active:scale-90 touch-manipulation",
                             isExpanded && "rotate-180 text-white/80"
                         )}
                         title={isExpanded ? "Eingabe schließen" : "Noten eingeben"}
