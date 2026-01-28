@@ -102,10 +102,10 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
     };
 
     return (
-        <div className="relative overflow-hidden rounded-2xl" ref={cardRef}>
+        <div className="relative overflow-hidden rounded-3xl" ref={cardRef}>
             {/* Delete button behind */}
             <div
-                className="absolute inset-y-0 right-0 w-20 bg-danger flex items-center justify-center text-white rounded-r-2xl transition-opacity"
+                className="absolute inset-y-0 right-0 w-20 bg-danger flex items-center justify-center text-white rounded-r-3xl transition-opacity"
                 style={{ opacity: swipeX > 10 ? 1 : 0 }}
             >
                 <button onClick={handleSwipeDelete} className="w-full h-full flex items-center justify-center">
@@ -116,8 +116,8 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
             {/* Main card content */}
             <div
                 className={clsx(
-                    "relative bg-[var(--glass-bg)] backdrop-blur-xl rounded-2xl overflow-hidden border border-[var(--glass-border)] transition-all duration-300 ease-spring hover:bg-[var(--glass-hover)] group",
-                    isExpanded && "ring-1 ring-[var(--glass-border)]"
+                    "relative bg-[var(--glass-bg)] backdrop-blur-xl rounded-3xl overflow-hidden border border-[var(--glass-border)] transition-all duration-300 ease-spring hover:bg-[var(--glass-hover)] shadow-2xl group",
+                    isExpanded && "border-[var(--glass-hover)]"
                 )}
                 style={{ transform: `translateX(-${swipeX}px)`, transition: isSwiping.current ? 'none' : 'transform 0.3s ease' }}
                 onTouchStart={handleTouchStart}

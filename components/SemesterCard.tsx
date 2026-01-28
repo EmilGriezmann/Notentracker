@@ -14,7 +14,7 @@ export default function SemesterCard({ semester }: Props) {
 
     return (
         <Link href={`/semester/${semester.id}`}>
-            <div className="relative group overflow-hidden rounded-[22px] bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] transition-all duration-300 ease-spring hover:scale-[1.02] active:scale-[0.98] hover:bg-[var(--glass-hover)] cursor-pointer shadow-lg shadow-black/20 dark:shadow-black/50">
+            <div className="relative group overflow-hidden rounded-3xl bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] transition-all duration-300 ease-spring hover:scale-[1.02] active:scale-[0.98] hover:bg-[var(--glass-hover)] cursor-pointer shadow-2xl">
 
                 <div className="p-6 relative z-10">
                     <div className="flex justify-between items-start mb-8">
