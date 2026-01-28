@@ -33,27 +33,14 @@ export default function SemesterCard({ semester }: Props) {
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-end border-t border-white/5 pt-4">
-                        <div>
-                            <span className="block text-[13px] text-text-muted font-medium mb-0.5">Fächer</span>
-                            <span className="text-lg font-semibold text-white">{semester.subjects.length}</span>
-                        </div>
-
-                        <div className="text-right">
-                            <span className="block text-[13px] text-text-muted font-medium mb-0.5">Schnitt</span>
-                            {avgPoints !== null ? (
-                                <div className="flex flex-col items-end">
-                                    <span className="text-3xl font-bold text-white leading-none tracking-tight">
-                                        {avgGrade ? avgGrade.toFixed(2) : '-'}
-                                    </span>
-                                    <span className="text-[11px] font-semibold text-text-muted mt-1 bg-white/5 px-2 py-0.5 rounded-full">
-                                        {avgPoints.toFixed(1)} Pkt
-                                    </span>
-                                </div>
-                            ) : (
-                                <span className="text-white/30 italic text-sm">--</span>
-                            )}
-                        </div>
+                    <div className="flex justify-end items-end border-t border-white/5 pt-4">
+                        {avgGrade !== null ? (
+                            <span className="text-3xl font-bold text-white leading-none tracking-tight">
+                                {avgGrade.toFixed(2)}
+                            </span>
+                        ) : (
+                            <span className="text-white/30 italic text-sm">--</span>
+                        )}
                     </div>
                 </div>
             </div>

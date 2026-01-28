@@ -23,10 +23,14 @@ const config: Config = {
             backdropBlur: {
                 xs: '2px',
             },
+            transitionTimingFunction: {
+                'spring': 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+            },
             animation: {
                 'fade-in': 'fadeIn 0.5s ease-out forwards',
-                'slide-up': 'slideUp 0.3s ease-out forwards',
-                'scale-in': 'scaleIn 0.2s ease-out forwards',
+                'slide-up': 'slideUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+                'scale-in': 'scaleIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+                'expand': 'expand 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
             },
             keyframes: {
                 fadeIn: {
@@ -40,6 +44,10 @@ const config: Config = {
                 scaleIn: {
                     '0%': { opacity: '0', transform: 'scale(0.95)' },
                     '100%': { opacity: '1', transform: 'scale(1)' },
+                },
+                expand: {
+                    '0%': { opacity: '0', maxHeight: '0' },
+                    '100%': { opacity: '1', maxHeight: '200px' },
                 }
             }
         },

@@ -79,35 +79,30 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
     return (
         <div
             className={clsx(
-                "group bg-surface/80 backdrop-blur-sm rounded-xl overflow-hidden border border-white/5 transition-all hover:bg-surface-highlight",
-                isExpanded && "ring-1 ring-white/10"
+                "group bg-white/[0.06] backdrop-blur-xl rounded-2xl overflow-hidden border border-white/[0.08] transition-all duration-300 ease-spring hover:bg-white/[0.09] active:scale-[0.98]",
+                isExpanded && "ring-1 ring-white/[0.12]"
             )}
-            style={{}}
         >
 
             {/* Header Row */}
-            <div className="px-3 sm:px-4 py-4 sm:py-5 flex items-center justify-between relative overflow-hidden">
-                {subject.color && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: subject.color }} />
-                )}
-
-                <div className="flex items-center gap-3 pl-3">
+            <div className="px-4 py-4 sm:py-5 flex items-center justify-between">
+                <div className="flex items-center gap-3">
                     <div
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center text-sm font-bold text-white shadow-sm"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-xs font-semibold text-white/90"
                         style={{ backgroundColor: subject.color || '#333' }}
                     >
                         {subject.type}
                     </div>
-                    <h3 className="font-semibold text-white tracking-wide">{subject.name}</h3>
+                    <h3 className="font-medium text-white tracking-wide">{subject.name}</h3>
                 </div>
 
                 <div className="flex items-center gap-2.5 sm:gap-3">
                     <button
                         onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                        className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-text-muted hover:text-white hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100"
+                        className="w-8 h-8 flex items-center justify-center rounded-full text-white/40 hover:text-white/80 transition-all duration-200 opacity-0 group-hover:opacity-100 active:scale-90"
                         title="Bearbeiten"
                     >
-                        <Edit2 size={14} />
+                        <Edit2 size={13} />
                     </button>
 
                     {isEditingOverride ? (
@@ -152,26 +147,26 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
                         type="button"
                         onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
                         className={clsx(
-                            "w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-full text-text-muted hover:text-white hover:bg-white/10 transition-all",
-                            isExpanded && "rotate-180 text-white bg-white/10"
+                            "w-8 h-8 flex items-center justify-center rounded-full text-white/40 hover:text-white/80 transition-all duration-300 ease-spring active:scale-90",
+                            isExpanded && "rotate-180 text-white/80"
                         )}
                         title={isExpanded ? "Eingabe schließen" : "Noten eingeben"}
                         aria-expanded={isExpanded}
                     >
-                        <ChevronDown size={16} />
+                        <ChevronDown size={15} />
                     </button>
                 </div>
             </div>
 
             {/* Grades Grid */}
             {isExpanded && (
-                <div className="grid grid-cols-2">
+                <div className="grid grid-cols-2 border-t border-white/[0.06] animate-expand">
                     {localQuarters.map((q, idx) => (
-                        <div key={q.id || idx} className="p-2.5 sm:p-3">
-                            <div className="text-[10px] font-bold text-text-muted uppercase mb-2 text-center tracking-widest">{q.name}</div>
+                        <div key={q.id || idx} className="p-3">
+                            <div className="text-[10px] font-medium text-white/40 uppercase mb-2 text-center tracking-widest">{q.name}</div>
                             <div className="flex gap-2">
-                                <div className="flex-1 bg-black/20 rounded-lg p-1.5 flex flex-col items-center">
-                                    <span className="text-[9px] text-text-muted uppercase mb-1">Somi</span>
+                                <div className="flex-1 bg-white/[0.04] rounded-xl p-1.5 flex flex-col items-center">
+                                    <span className="text-[9px] text-white/30 uppercase mb-1">Somi</span>
                                     <input
                                         type="number"
                                         min="0" max="15"
@@ -179,13 +174,13 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
                                         onChange={(e) => handleLocalChange(idx, 'somi', e.target.value)}
                                         onBlur={commitChange}
                                         onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                                        className="w-full bg-transparent text-center font-semibold text-white outline-none focus:text-primary transition-colors text-sm py-1"
+                                        className="w-full bg-transparent text-center font-medium text-white outline-none focus:text-primary transition-colors duration-200 text-sm py-1"
                                         placeholder="-"
                                     />
                                 </div>
                                 {subject.assessmentType === 'WRITTEN' && (
-                                    <div className="flex-1 bg-black/20 rounded-lg p-1.5 flex flex-col items-center">
-                                        <span className="text-[9px] text-text-muted uppercase mb-1">Klausur</span>
+                                    <div className="flex-1 bg-white/[0.04] rounded-xl p-1.5 flex flex-col items-center">
+                                        <span className="text-[9px] text-white/30 uppercase mb-1">Klausur</span>
                                         <input
                                             type="number"
                                             min="0" max="15"
@@ -193,7 +188,7 @@ export default function SubjectCard({ subject, onChange, onDelete, onEdit, isExp
                                             onChange={(e) => handleLocalChange(idx, 'written', e.target.value)}
                                             onBlur={commitChange}
                                             onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
-                                            className="w-full bg-transparent text-center font-semibold text-white outline-none focus:text-primary transition-colors text-sm py-1"
+                                            className="w-full bg-transparent text-center font-medium text-white outline-none focus:text-primary transition-colors duration-200 text-sm py-1"
                                             placeholder="-"
                                         />
                                     </div>

@@ -168,15 +168,14 @@ export default function SemesterPage() {
 
             {/* Navigation */}
             <nav className="mb-8 flex justify-between items-center">
-                <Link href="/" className="inline-flex items-center gap-1 text-primary hover:text-primary/80 transition-colors font-medium text-sm">
-                    <ChevronLeft size={20} />
-                    Semesterübersicht
+                <Link href="/" className="w-9 h-9 flex items-center justify-center rounded-full bg-white/[0.06] backdrop-blur-sm text-white/60 hover:text-white hover:bg-white/[0.1] transition-all duration-200 active:scale-90">
+                    <ChevronLeft size={18} />
                 </Link>
                 <button
                     onClick={handleDeleteSemester}
-                    className="text-danger hover:bg-danger/10 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                    className="text-white/30 hover:text-danger text-xs font-medium transition-colors duration-200"
                 >
-                    Semester Löschen
+                    Löschen
                 </button>
             </nav>
 
@@ -185,9 +184,8 @@ export default function SemesterPage() {
 
                 {/* Row 1: Title */}
                 <div className="mb-8">
-                    <span className="text-secondary font-bold uppercase tracking-widest text-xs mb-2 block">Semester</span>
+                    <span className="text-white/50 font-bold uppercase tracking-widest text-xs mb-2 block">Semester</span>
                     <h1 className="text-5xl font-extrabold text-white tracking-tight">{semester.name}</h1>
-                    <p className="text-text-muted mt-2 font-medium">{semester.subjects.length} Fächer eingetragen</p>
                 </div>
 
                 {/* Row 2: Stats & Chart */}
@@ -195,7 +193,7 @@ export default function SemesterPage() {
 
                     {/* Average Card */}
                     {avgPoints !== null && (
-                        <div className="bg-gradient-to-br from-surface to-surface-highlight p-6 rounded-3xl border border-white/5 shadow-2xl flex flex-col justify-center items-center text-center min-h-[165px]">
+                        <div className="bg-white/[0.06] backdrop-blur-xl p-6 rounded-3xl border border-white/[0.08] shadow-2xl flex flex-col justify-center items-center text-center min-h-[165px]">
                             <div className="text-sm text-text-muted font-bold uppercase tracking-wider mb-3">Durchschnitt</div>
                             <div className="text-7xl font-black text-white leading-none tracking-tighter mb-4 scale-110">
                                 {avgGrade ? avgGrade.toFixed(2) : '-'}
@@ -206,7 +204,7 @@ export default function SemesterPage() {
 
                     {/* Radar Chart */}
                     {(semester.subjects.length > 0) && (
-                        <div className="bg-gradient-to-br from-surface to-surface-highlight rounded-3xl border border-white/5 shadow-2xl min-h-[225px] flex items-center justify-center">
+                        <div className="bg-white/[0.06] backdrop-blur-xl rounded-3xl border border-white/[0.08] shadow-2xl min-h-[225px] flex items-center justify-center">
                             <SemesterRadar subjects={semester.subjects} />
                         </div>
                     )}
@@ -242,18 +240,16 @@ export default function SemesterPage() {
             {/* Add Button */}
             <button
                 onClick={openAddModal}
-                className="w-full mt-8 mb-8 bg-surface/50 border border-dashed border-white/10 hover:border-primary/50 text-text-muted hover:text-white py-4 rounded-xl transition-all flex justify-center items-center gap-2 font-semibold group animate-fade-in"
+                className="w-full mt-8 mb-8 bg-white/[0.04] backdrop-blur-sm border border-white/[0.08] hover:bg-white/[0.08] text-text-muted hover:text-white py-3 rounded-2xl transition-all flex justify-center items-center gap-2 text-sm font-medium active:scale-[0.98]"
             >
-                <div className="bg-white/10 p-1 rounded-full group-hover:bg-primary group-hover:text-white transition-colors">
-                    <Plus size={18} />
-                </div>
+                <Plus size={16} strokeWidth={2.5} />
                 Fach hinzufügen
             </button>
 
             {/* Modal Overlay */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-surface border border-white/10 p-6 rounded-3xl shadow-2xl w-full max-w-md animate-scale-in relative">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xl animate-fade-in">
+                    <div className="bg-white/[0.08] backdrop-blur-2xl border border-white/[0.1] p-6 rounded-3xl shadow-2xl w-full max-w-md animate-scale-in relative">
                         <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-text-muted hover:text-white">
                             <X size={20} />
                         </button>

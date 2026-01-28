@@ -9,6 +9,7 @@
 }
 
 body {
+  font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
   color: rgb(var(--foreground-rgb));
   background: #000000;
   -webkit-font-smoothing: antialiased;

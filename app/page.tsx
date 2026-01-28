@@ -44,22 +44,43 @@ export default function Home() {
 
             {/* Header */}
             <header className="mb-12 animate-fade-in">
-                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                    <div>
-                        <h1 className="text-5xl font-bold tracking-tight text-white mb-2">Noten</h1>
-                        <p className="text-lg text-text-muted font-medium">Alle Semester im Überblick</p>
-                    </div>
+                <div className="flex items-center gap-5">
+                    <h1 className="text-5xl font-bold tracking-tight text-white">Noten</h1>
 
-                    {totalAvgGrade !== null && (
-                        <div className="bg-surface/50 backdrop-blur-md px-6 py-4 rounded-2xl border border-white/5 flex items-center gap-4 hover:bg-surface transition-colors">
-                            <div className="text-right">
-                                <div className="text-xs text-text-muted font-bold uppercase tracking-wider mb-0.5">Gesamt</div>
-                                <div className="text-3xl font-bold text-white leading-none">{totalAvgGrade.toFixed(2)}</div>
+                    {totalAvgGrade !== null && totalAvgPoints !== null && (() => {
+                        // Map grade: 4.0+ = red, 1.0–4.0 smooth transition red→green
+                        const pct = Math.max(0, Math.min(100, ((6 - totalAvgGrade) / 5) * 100));
+                        let ringColor: string;
+                        if (totalAvgGrade >= 4.0) {
+                            ringColor = '#ff453a';
+                        } else {
+                            // 4.0 → 0° (red), 1.0 → 142° (green)
+                            const t = Math.max(0, Math.min(1, (4.0 - totalAvgGrade) / 3.0));
+                            const hue = Math.round(t * 142);
+                            ringColor = `hsl(${hue}, 75%, 55%)`;
+                        }
+                        const radius = 38;
+                        const circumference = 2 * Math.PI * radius;
+                        const strokeDash = (pct / 100) * circumference;
+
+                        return (
+                            <div className="relative w-[88px] h-[88px] flex items-center justify-center">
+                                <svg width="88" height="88" viewBox="0 0 88 88" className="absolute inset-0 -rotate-90">
+                                    <circle cx="44" cy="44" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+                                    <circle
+                                        cx="44" cy="44" r={radius}
+                                        fill="none"
+                                        stroke={ringColor}
+                                        strokeWidth="5"
+                                        strokeLinecap="round"
+                                        strokeDasharray={`${strokeDash} ${circumference}`}
+                                        style={{ transition: 'stroke-dasharray 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)' }}
+                                    />
+                                </svg>
+                                <span className="relative text-xl font-bold text-white leading-none">{totalAvgGrade.toFixed(1)}</span>
                             </div>
-                            <div className="h-10 w-px bg-white/10 mx-2"></div>
-                            <div className="text-xs font-mono text-text-muted">{totalAvgPoints?.toFixed(2)} Pkt</div>
-                        </div>
-                    )}
+                        );
+                    })()}
                 </div>
             </header>
 
@@ -69,10 +90,9 @@ export default function Home() {
                     <h2 className="text-xl font-bold text-white tracking-tight">Meine Semester</h2>
                     <button
                         onClick={() => setIsAdding(true)}
-                        className="flex items-center gap-2 bg-primary/10 hover:bg-primary text-primary hover:text-white px-5 py-2.5 rounded-full font-semibold transition-all duration-300"
+                        className="w-9 h-9 flex items-center justify-center rounded-full bg-white/[0.06] text-white/60 hover:text-white hover:bg-white/[0.12] transition-all duration-200 active:scale-90"
                     >
                         <Plus size={18} strokeWidth={2.5} />
-                        <span className="text-sm">Hinzufügen</span>
                     </button>
                 </div>
 
