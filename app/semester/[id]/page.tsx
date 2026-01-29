@@ -261,9 +261,7 @@ export default function SemesterPage() {
                     )}
 
                     {(semester.subjects.length > 0) && (
-                        <div className="bg-[var(--glass-bg)] backdrop-blur-xl rounded-3xl border border-[var(--glass-border)] shadow-2xl min-h-[225px] flex items-center justify-center">
-                            <SemesterRadar subjects={semester.subjects} />
-                        </div>
+                        <SemesterRadar subjects={semester.subjects} />
                     )}
                 </div>
             </header>
