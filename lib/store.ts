@@ -1,59 +1,161 @@
-import { Semester, Subject, Quarter, GradePoints } from '../types';
+import { Semester, Subject, Quarter, SubjectDefinition, StoredSemester } from '../types';
 
-const STORAGE_KEY = 'notentracker_data';
+const STORAGE_KEY = 'notentracker_semesters';
+const DEFINITIONS_KEY = 'notentracker_subject_definitions';
+
+const DEFAULT_QUARTERS: Quarter[] = [
+    { id: 'q1', name: 'Q1' },
+    { id: 'q2', name: 'Q2' },
+];
+
+// ─── Definitions ─────────────────────────────────────────────────────────────
+
+export const loadSubjectDefinitions = (): SubjectDefinition[] => {
+    if (typeof window === 'undefined') return [];
+    const data = localStorage.getItem(DEFINITIONS_KEY);
+    if (!data) return [];
+    try {
+        return JSON.parse(data);
+    } catch {
+        return [];
+    }
+};
+
+const saveSubjectDefinitions = (defs: SubjectDefinition[]) => {
+    localStorage.setItem(DEFINITIONS_KEY, JSON.stringify(defs));
+};
+
+// ─── Semester load / save ─────────────────────────────────────────────────────
 
 export const loadSemesters = (): Semester[] => {
     if (typeof window === 'undefined') return [];
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(raw);
+    } catch {
+        return [];
+    }
+    if (!Array.isArray(parsed) || parsed.length === 0) return [];
+
+    // Detect old format (subjects[] directly on semester)
+    if ('subjects' in parsed[0]) {
+        return migrateOldFormat(parsed);
+    }
+
+    // New format: merge definitions with entries
+    const defs = loadSubjectDefinitions();
+    return parsed.map((s: StoredSemester): Semester => ({
+        id: s.id,
+        name: s.name,
+        subjects: s.entries
+            .map(entry => {
+                const def = defs.find(d => d.id === entry.subjectId);
+                if (!def) return null;
+                return {
+                    id: def.id,
+                    name: def.name,
+                    type: def.type,
+                    assessmentType: def.assessmentType,
+                    color: def.color,
+                    quarters: entry.quarters,
+                    finalOverride: entry.finalOverride,
+                } as Subject;
+            })
+            .filter(Boolean) as Subject[],
+    }));
 };
 
 export const saveSemesters = (semesters: Semester[]) => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(semesters));
+
+    // Extract and merge subject definitions (newest edit wins per id)
+    const defMap = new Map<string, SubjectDefinition>(
+        loadSubjectDefinitions().map(d => [d.id, d])
+    );
+    semesters.forEach(sem =>
+        sem.subjects.forEach(sub => {
+            defMap.set(sub.id, {
+                id: sub.id,
+                name: sub.name,
+                type: sub.type,
+                assessmentType: sub.assessmentType,
+                color: sub.color,
+            });
+        })
+    );
+    saveSubjectDefinitions(Array.from(defMap.values()));
+
+    // Save semesters in new storage format
+    const stored: StoredSemester[] = semesters.map(sem => ({
+        id: sem.id,
+        name: sem.name,
+        entries: sem.subjects.map(sub => ({
+            subjectId: sub.id,
+            quarters: sub.quarters,
+            finalOverride: sub.finalOverride,
+        })),
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
 };
 
-export const calculateSubjectAverage = (subject: Subject): number | null => {
-    // If a final "Zeugnisnote" override exists, it always wins.
-    if (typeof subject.finalOverride === 'number') {
-        return subject.finalOverride;
-    }
+// Creates a new Semester, optionally copying the subject list (without grades) from another.
+export const createSemester = (name: string, copyFrom?: Semester): Semester => ({
+    id: crypto.randomUUID(),
+    name,
+    subjects: copyFrom
+        ? copyFrom.subjects.map(sub => ({
+              ...sub,
+              quarters: DEFAULT_QUARTERS.map(q => ({ ...q })),
+              finalOverride: undefined,
+          }))
+        : [],
+});
 
-    let totalPoints = 0;
+// ─── Migration ────────────────────────────────────────────────────────────────
+
+function migrateOldFormat(old: Semester[]): Semester[] {
+    // Persist in new format immediately so next load uses new path
+    saveSemesters(old);
+    return old;
+}
+
+// ─── Calculation helpers ──────────────────────────────────────────────────────
+
+export const calculateSubjectAverage = (subject: Subject): number | null => {
+    if (typeof subject.finalOverride === 'number') return subject.finalOverride;
+
+    let total = 0;
     let count = 0;
 
     subject.quarters.forEach(q => {
-        // Add Somi
-        if (q.somi !== undefined && q.somi !== null) {
-            totalPoints += q.somi;
-            count++;
-        }
-        // Add Written only if subject is WRITTEN
+        if (q.somi !== undefined && q.somi !== null) { total += q.somi; count++; }
         if (subject.assessmentType === 'WRITTEN' && q.written !== undefined && q.written !== null) {
-            totalPoints += q.written;
-            count++;
+            total += q.written; count++;
         }
     });
 
-    if (count === 0) return null;
-    return totalPoints / count;
+    return count === 0 ? null : total / count;
 };
 
 export const calculateSemesterAverage = (semester: Semester): number | null => {
-    let totalWeightedPoints = 0;
+    let totalWeighted = 0;
     let totalWeight = 0;
 
     semester.subjects.forEach(sub => {
         const avg = calculateSubjectAverage(sub);
         if (avg !== null) {
-            const weight = sub.type === 'LK' ? 2 : 1;
-            totalWeightedPoints += avg * weight;
-            totalWeight += weight;
+            const zeugnisnote = Math.round(avg); // ganzzahlige Notenpunkte wie auf dem Zeugnis
+            const w = sub.type === 'LK' ? 2 : 1;
+            totalWeighted += zeugnisnote * w;
+            totalWeight += w;
         }
     });
 
-    if (totalWeight === 0) return null;
-    return totalWeightedPoints / totalWeight;
+    return totalWeight === 0 ? null : totalWeighted / totalWeight;
 };
 
 export const calculateTotalAverage = (semesters: Semester[]): number | null => {
@@ -62,36 +164,24 @@ export const calculateTotalAverage = (semesters: Semester[]): number | null => {
 
     semesters.forEach(sem => {
         const avg = calculateSemesterAverage(sem);
-        if (avg !== null) {
-            total += avg;
-            count++;
-        }
+        if (avg !== null) { total += avg; count++; }
     });
 
-    if (count === 0) return null;
-    return total / count;
+    return count === 0 ? null : total / count;
 };
 
 export const pointsToGrade = (points: number): number => {
-    // Approx formula: 17 - points / 3.
-    const grade = (17 - points) / 3;
-    return Math.round(grade * 100) / 100; // 2 decimal places
+    return Math.round(((17 - points) / 3) * 100) / 100;
 };
 
-// Helper to sort subjects: LK -> GK Written -> GK Oral
 export const sortSubjects = (subjects: Subject[]): Subject[] => {
     return [...subjects].sort((a, b) => {
-        // 1. LK vs GK
         if (a.type === 'LK' && b.type !== 'LK') return -1;
         if (a.type !== 'LK' && b.type === 'LK') return 1;
-
-        // 2. If both GK, check assessment: Written vs Oral
         if (a.type === 'GK' && b.type === 'GK') {
             if (a.assessmentType === 'WRITTEN' && b.assessmentType !== 'WRITTEN') return -1;
             if (a.assessmentType !== 'WRITTEN' && b.assessmentType === 'WRITTEN') return 1;
         }
-
-        // 3. Fallback: Alphabetical
         return a.name.localeCompare(b.name);
     });
 };

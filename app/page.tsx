@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { loadSemesters, saveSemesters, calculateTotalAverage, pointsToGrade } from '@/lib/store';
+import { loadSemesters, saveSemesters, calculateTotalAverage, pointsToGrade, createSemester } from '@/lib/store';
 import { Semester } from '@/types';
 import SemesterCard from '@/components/SemesterCard';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -63,7 +63,7 @@ function GradeRing({ grade }: { grade: number }) {
                 />
             </svg>
             <span className="relative text-xl font-bold text-[var(--color-text)] leading-none">
-                {animatedGrade.toFixed(1)}
+                {animatedGrade.toFixed(2)}
             </span>
         </div>
     );
@@ -74,6 +74,7 @@ export default function Home() {
     const [isLoaded, setIsLoaded] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
     const [newSemesterName, setNewSemesterName] = useState('');
+    const [copySubjects, setCopySubjects] = useState(false);
 
     useEffect(() => {
         setSemesters(loadSemesters());
@@ -84,16 +85,17 @@ export default function Home() {
         e.preventDefault();
         if (!newSemesterName.trim()) return;
 
-        const newSem: Semester = {
-            id: crypto.randomUUID(),
-            name: newSemesterName.trim(),
-            subjects: []
-        };
+        const lastSemester = semesters[semesters.length - 1];
+        const newSem = createSemester(
+            newSemesterName.trim(),
+            copySubjects && lastSemester ? lastSemester : undefined
+        );
 
         const updated = [...semesters, newSem];
         setSemesters(updated);
         saveSemesters(updated);
         setNewSemesterName('');
+        setCopySubjects(false);
         setIsAdding(false);
     };
 
@@ -134,7 +136,7 @@ export default function Home() {
                 {/* Input Form - Glass Modal */}
                 {isAdding && (
                     <div className="mb-8 bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] rounded-[24px] animate-scale-in">
-                        <form onSubmit={handleAddSemester} className="p-6 flex flex-col md:flex-row gap-4 items-center">
+                        <form onSubmit={handleAddSemester} className="p-6 flex flex-col gap-4">
                             <input
                                 type="text"
                                 value={newSemesterName}
@@ -143,17 +145,33 @@ export default function Home() {
                                 className="flex-1 bg-transparent text-xl font-bold text-[var(--color-text)] placeholder-[var(--color-text-muted)] outline-none border-b-2 border-transparent focus:border-primary/50 px-2 py-1 transition-colors w-full"
                                 autoFocus
                             />
-                            <div className="flex gap-3 w-full md:w-auto">
+                            {semesters.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setCopySubjects(v => !v)}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all self-start ${
+                                        copySubjects
+                                            ? 'bg-primary/15 text-primary border border-primary/30'
+                                            : 'bg-[var(--input-bg)] text-[var(--color-text-muted)] border border-[var(--glass-border)]'
+                                    }`}
+                                >
+                                    <span className={`w-4 h-4 rounded flex items-center justify-center border transition-all ${copySubjects ? 'bg-primary border-primary' : 'border-[var(--color-text-muted)]'}`}>
+                                        {copySubjects && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                    </span>
+                                    Fächer aus {semesters[semesters.length - 1].name} übernehmen
+                                </button>
+                            )}
+                            <div className="flex gap-3">
                                 <button
                                     type="submit"
-                                    className="flex-1 md:flex-none bg-primary text-white hover:bg-primary/90 px-6 py-2.5 rounded-xl font-bold transition-all active:scale-95"
+                                    className="flex-1 bg-primary text-white hover:bg-primary/90 px-6 py-2.5 rounded-xl font-bold transition-all active:scale-95"
                                 >
                                     Erstellen
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={() => setIsAdding(false)}
-                                    className="flex-1 md:flex-none bg-[var(--glass-bg)] hover:bg-[var(--glass-hover)] text-[var(--color-text)] px-6 py-2.5 rounded-xl font-bold transition-all active:scale-95"
+                                    onClick={() => { setIsAdding(false); setCopySubjects(false); }}
+                                    className="flex-1 bg-[var(--glass-bg)] hover:bg-[var(--glass-hover)] text-[var(--color-text)] px-6 py-2.5 rounded-xl font-bold transition-all active:scale-95"
                                 >
                                     Abbrechen
                                 </button>

@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { loadSemesters, saveSemesters, calculateSemesterAverage, pointsToGrade, sortSubjects } from '@/lib/store';
-import { Semester, Subject } from '@/types';
+import { loadSemesters, saveSemesters, loadSubjectDefinitions, calculateSemesterAverage, pointsToGrade, sortSubjects } from '@/lib/store';
+import { Semester, Subject, SubjectDefinition } from '@/types';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, Plus, X, Check } from 'lucide-react';
@@ -114,10 +114,12 @@ export default function SemesterPage() {
     const [semesters, setSemesters] = useState<Semester[]>([]);
     const [semester, setSemester] = useState<Semester | null>(null);
     const [expandedSubjectId, setExpandedSubjectId] = useState<string | null>(null);
+    const [allDefinitions, setAllDefinitions] = useState<SubjectDefinition[]>([]);
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editSubjectId, setEditSubjectId] = useState<string | null>(null);
+    const [modalMode, setModalMode] = useState<'pick' | 'new'>('pick');
 
     // Form State
     const [formName, setFormName] = useState('');
@@ -133,6 +135,7 @@ export default function SemesterPage() {
         found.subjects = sortSubjects(found.subjects);
         setSemester(found);
         setExpandedSubjectId(null);
+        setAllDefinitions(loadSubjectDefinitions());
     }, [id]);
 
     const saveCurrentSemester = (updatedSem: Semester) => {
@@ -148,6 +151,10 @@ export default function SemesterPage() {
         setFormType('GK');
         setFormAssess('WRITTEN');
         setFormColor(COLORS[0]);
+        // Show pick mode if there are definitions not yet in this semester
+        const existingIds = new Set(semester?.subjects.map(s => s.id) ?? []);
+        const available = allDefinitions.filter(d => !existingIds.has(d.id));
+        setModalMode(available.length > 0 ? 'pick' : 'new');
         setIsModalOpen(true);
     };
 
@@ -186,11 +193,22 @@ export default function SemesterPage() {
                 color: formColor
             };
 
-            const sortedExisting = sortSubjects(semester.subjects);
-            const updatedSem = { ...semester, subjects: [newSubject, ...sortedExisting] };
+            const updatedSem = { ...semester, subjects: sortSubjects([...semester.subjects, newSubject]) };
             saveCurrentSemester(updatedSem);
         }
 
+        setAllDefinitions(loadSubjectDefinitions());
+        setIsModalOpen(false);
+    };
+
+    const addExistingSubject = (def: SubjectDefinition) => {
+        if (!semester) return;
+        const subject: Subject = {
+            ...def,
+            quarters: [{ id: 'q1', name: 'Q1' }, { id: 'q2', name: 'Q2' }],
+        };
+        const updatedSem = { ...semester, subjects: sortSubjects([...semester.subjects, subject]) };
+        saveCurrentSemester(updatedSem);
         setIsModalOpen(false);
     };
 
@@ -309,8 +327,60 @@ export default function SemesterPage() {
                             <X size={20} />
                         </button>
                         <h3 className="text-xl font-bold text-[var(--color-text)] mb-6">
-                            {editSubjectId ? 'Fach bearbeiten' : 'Neues Fach'}
+                            {editSubjectId ? 'Fach bearbeiten' : 'Fach hinzufügen'}
                         </h3>
+
+                        {/* Pick existing subjects – only shown when adding */}
+                        {!editSubjectId && (() => {
+                            const existingIds = new Set(semester?.subjects.map(s => s.id) ?? []);
+                            const available = allDefinitions.filter(d => !existingIds.has(d.id));
+                            if (available.length === 0) return null;
+                            return (
+                                <div className="mb-6">
+                                    {modalMode === 'pick' && (
+                                        <>
+                                            <p className="text-xs font-bold text-[var(--color-text-muted)] uppercase mb-3">Vorhandene Fächer</p>
+                                            <div className="flex flex-col gap-2 mb-4">
+                                                {available.map(def => (
+                                                    <button
+                                                        key={def.id}
+                                                        type="button"
+                                                        onClick={() => addExistingSubject(def)}
+                                                        className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-[var(--input-bg)] hover:bg-[var(--glass-hover)] border border-[var(--glass-border)] text-left transition-all active:scale-[0.98]"
+                                                    >
+                                                        <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold text-white/90 shrink-0" style={{ backgroundColor: def.color || '#333' }}>
+                                                            {def.type}
+                                                        </div>
+                                                        <span className="font-medium text-[var(--color-text)]">{def.name}</span>
+                                                        <span className="ml-auto text-xs text-[var(--color-text-muted)]">{def.assessmentType === 'WRITTEN' ? 'Schriftl.' : 'Mündl.'}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setModalMode('new')}
+                                                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-[var(--glass-border)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--glass-hover)] text-sm font-medium transition-all"
+                                            >
+                                                <Plus size={14} strokeWidth={2.5} />
+                                                Neues Fach erstellen
+                                            </button>
+                                        </>
+                                    )}
+                                    {modalMode === 'new' && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setModalMode('pick')}
+                                            className="text-xs text-primary font-medium mb-4 flex items-center gap-1 hover:underline"
+                                        >
+                                            ← Zurück zur Auswahl
+                                        </button>
+                                    )}
+                                </div>
+                            );
+                        })()}
+
+                        {/* New subject form – shown in edit mode or when modalMode === 'new' */}
+                        {(editSubjectId || modalMode === 'new' || allDefinitions.filter(d => !new Set(semester?.subjects.map(s => s.id) ?? []).has(d.id)).length === 0) && (
                         <form onSubmit={handleSaveSubject} className="space-y-6">
                             <div>
                                 <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-2">Fachname</label>
@@ -375,6 +445,7 @@ export default function SemesterPage() {
                                 </button>
                             )}
                         </form>
+                        )}
                     </div>
                 </div>
             )}

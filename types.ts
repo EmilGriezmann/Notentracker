@@ -4,30 +4,51 @@ export type GradeType = 'SOMI' | 'WRITTEN';
 
 export interface Quarter {
     id: string;
-    name: string; // "Q1", "Q2" etc.
-    somi?: GradePoints; // Optional because it might not be set yet
-    written?: GradePoints; // Optional
+    name: string;
+    somi?: GradePoints;
+    written?: GradePoints;
 }
 
 export type SubjectType = 'GK' | 'LK';
-export type SubjectAssessmentType = 'WRITTEN' | 'ORAL'; // Schriftlich (Somi+Klausur) oder Mündlich (nur Somi)
+export type SubjectAssessmentType = 'WRITTEN' | 'ORAL';
 
+// Global subject master data – shared across all semesters
+export interface SubjectDefinition {
+    id: string;
+    name: string;
+    type: SubjectType;
+    assessmentType: SubjectAssessmentType;
+    color?: string;
+}
+
+// Per-semester grade data (raw storage)
+export interface SemesterEntry {
+    subjectId: string;
+    quarters: Quarter[];
+    finalOverride?: GradePoints;
+}
+
+// Stored semester (raw storage format)
+export interface StoredSemester {
+    id: string;
+    name: string;
+    entries: SemesterEntry[];
+}
+
+// View model – merged definition + grades (what components use)
 export interface Subject {
     id: string;
     name: string;
     type: SubjectType;
     assessmentType: SubjectAssessmentType;
-    quarters: Quarter[];
-    /**
-     * Optional "Zeugnisnote"/Endnote override (0-15 points).
-     * If set, averages should use this value instead of calculating from quarters.
-     */
-    finalOverride?: GradePoints;
     color?: string;
+    quarters: Quarter[];
+    finalOverride?: GradePoints;
 }
 
+// View model semester (what components use)
 export interface Semester {
     id: string;
-    name: string; // e.g. "Q1.1"
+    name: string;
     subjects: Subject[];
 }
