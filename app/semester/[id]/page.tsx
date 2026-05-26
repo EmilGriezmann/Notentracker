@@ -104,6 +104,8 @@ const SUBJECT_SUGGESTIONS = [
     'Deutsch', 'Mathematik', 'Englisch', 'Physik', 'Chemie',
     'Biologie', 'Geschichte', 'Geographie', 'Informatik', 'Sport',
     'Musik', 'Kunst', 'Philosophie', 'Sozialkunde', 'Französisch',
+    'Spanisch', 'Latein', 'Russisch', 'Pädagogik', 'Wirtschaft',
+    'Psychologie', 'Religion', 'Ethik', 'Italienisch', 'Chinesisch',
 ];
 
 // Apple-inspired colors (12 options)
