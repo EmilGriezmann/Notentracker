@@ -125,6 +125,29 @@ function migrateOldFormat(old: Semester[]): Semester[] {
 
 // ─── Calculation helpers ──────────────────────────────────────────────────────
 
+export const calculateQuarterAverage = (semester: Semester, quarterIndex: number): number | null => {
+    let totalWeighted = 0;
+    let totalWeight = 0;
+
+    semester.subjects.forEach(sub => {
+        const q = sub.quarters[quarterIndex];
+        if (!q) return;
+        let total = 0;
+        let count = 0;
+        if (q.somi !== undefined && q.somi !== null) { total += q.somi; count++; }
+        if (sub.assessmentType === 'WRITTEN' && q.written !== undefined && q.written !== null) {
+            total += q.written; count++;
+        }
+        if (count > 0) {
+            const w = sub.type === 'LK' ? 2 : 1;
+            totalWeighted += (total / count) * w;
+            totalWeight += w;
+        }
+    });
+
+    return totalWeight === 0 ? null : totalWeighted / totalWeight;
+};
+
 export const calculateSubjectAverage = (subject: Subject): number | null => {
     if (typeof subject.finalOverride === 'number') return subject.finalOverride;
 

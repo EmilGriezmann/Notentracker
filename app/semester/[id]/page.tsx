@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { loadSemesters, saveSemesters, loadSubjectDefinitions, calculateSemesterAverage, pointsToGrade, sortSubjects } from '@/lib/store';
+import { loadSemesters, saveSemesters, loadSubjectDefinitions, calculateSemesterAverage, calculateQuarterAverage, pointsToGrade, sortSubjects } from '@/lib/store';
 import { Semester, Subject, SubjectDefinition } from '@/types';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Plus, X, Check } from 'lucide-react';
+import { ChevronLeft, Plus, X, Check, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import SubjectCard from '@/components/SubjectCard';
 import SemesterRadar from '@/components/SemesterRadar';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -322,6 +322,12 @@ export default function SemesterPage() {
     const avgPoints = calculateSemesterAverage(semester);
     const avgGrade = avgPoints !== null ? pointsToGrade(avgPoints) : null;
 
+    const q1Avg = calculateQuarterAverage(semester, 0);
+    const q2Avg = calculateQuarterAverage(semester, 1);
+    const tendency = q1Avg !== null && q2Avg !== null
+        ? q2Avg > q1Avg + 0.1 ? 'up' : q2Avg < q1Avg - 0.1 ? 'down' : 'flat'
+        : null;
+
     return (
         <main className="min-h-screen p-6 md:p-12 max-w-4xl mx-auto selection:bg-primary/30">
 
@@ -350,8 +356,30 @@ export default function SemesterPage() {
 
                 <div className="grid md:grid-cols-2 gap-6 items-stretch">
                     {avgPoints !== null && avgGrade !== null && (
-                        <div className="bg-[var(--glass-bg)] backdrop-blur-xl p-6 rounded-3xl border border-[var(--glass-border)] shadow-2xl flex flex-col justify-center items-center text-center min-h-[165px]">
+                        <div className="bg-[var(--glass-bg)] backdrop-blur-xl p-6 rounded-3xl border border-[var(--glass-border)] shadow-2xl flex flex-col justify-center items-center text-center min-h-[165px] gap-4">
                             <SemesterGradeRing grade={avgGrade} points={avgPoints} />
+                            {tendency !== null && q1Avg !== null && q2Avg !== null && (
+                                <div className="flex items-center gap-2.5">
+                                    <div className="text-center">
+                                        <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-0.5">Q1</div>
+                                        <div className="text-base font-bold text-[var(--color-text)]">{q1Avg.toFixed(1)}</div>
+                                    </div>
+                                    <div className={clsx(
+                                        'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
+                                        tendency === 'up' ? 'bg-success/15 text-success' :
+                                        tendency === 'down' ? 'bg-danger/15 text-danger' :
+                                        'bg-[var(--glass-border)] text-[var(--color-text-muted)]'
+                                    )}>
+                                        {tendency === 'up' && <TrendingUp size={15} strokeWidth={2.5} />}
+                                        {tendency === 'down' && <TrendingDown size={15} strokeWidth={2.5} />}
+                                        {tendency === 'flat' && <Minus size={15} strokeWidth={2.5} />}
+                                    </div>
+                                    <div className="text-center">
+                                        <div className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-0.5">Q2</div>
+                                        <div className="text-base font-bold text-[var(--color-text)]">{q2Avg.toFixed(1)}</div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 

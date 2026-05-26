@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { Semester } from '@/types';
-import { calculateSemesterAverage, calculateSubjectAverage, pointsToGrade } from '@/lib/store';
+import { calculateQuarterAverage, calculateSubjectAverage, pointsToGrade } from '@/lib/store';
 
 // Catmull-Rom → cubic Bézier smooth path
 function smoothLinePath(pts: { x: number; y: number }[]): string {
@@ -186,12 +186,16 @@ interface Props {
 }
 
 export default function StatsSection({ semesters }: Props) {
-    const trendData = useMemo<TrendPoint[]>(() =>
-        semesters
-            .map(s => ({ name: s.name, avg: calculateSemesterAverage(s) }))
-            .filter((d): d is TrendPoint => d.avg !== null),
-        [semesters]
-    );
+    const trendData = useMemo<TrendPoint[]>(() => {
+        const points: TrendPoint[] = [];
+        semesters.forEach(sem => {
+            const q1 = calculateQuarterAverage(sem, 0);
+            const q2 = calculateQuarterAverage(sem, 1);
+            if (q1 !== null) points.push({ name: sem.name, avg: q1 });
+            if (q2 !== null) points.push({ name: '', avg: q2 });
+        });
+        return points;
+    }, [semesters]);
 
     const bestKlausuren = useMemo<KlausurItem[]>(() => {
         const results: KlausurItem[] = [];
