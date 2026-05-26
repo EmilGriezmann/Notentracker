@@ -140,6 +140,7 @@ export default function SemesterPage() {
     const [suggestionIndex, setSuggestionIndex] = useState(-1);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
+    const suppressSuggestionsRef = useRef(false);
 
     useEffect(() => {
         const list = loadSemesters();
@@ -166,6 +167,10 @@ export default function SemesterPage() {
     }, [formName, allDefinitions]);
 
     useEffect(() => {
+        if (suppressSuggestionsRef.current) {
+            suppressSuggestionsRef.current = false;
+            return;
+        }
         setSuggestionIndex(-1);
         setShowSuggestions(filteredSuggestions.length > 0);
     }, [filteredSuggestions]);
@@ -182,6 +187,7 @@ export default function SemesterPage() {
     }, []);
 
     const selectSuggestion = (s: { name: string; def: SubjectDefinition | null }) => {
+        suppressSuggestionsRef.current = true;
         setFormName(s.name);
         if (s.def) {
             setFormType(s.def.type);
