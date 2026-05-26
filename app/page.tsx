@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { loadSemesters, saveSemesters, calculateTotalAverage, pointsToGrade, createSemester } from '@/lib/store';
 import { Semester } from '@/types';
 import SemesterCard from '@/components/SemesterCard';
+import StatsSection from '@/components/StatsSection';
 import ThemeToggle from '@/components/ThemeToggle';
 import { Plus } from 'lucide-react';
 
@@ -117,6 +118,11 @@ export default function Home() {
                     )}
                 </div>
             </header>
+
+            {/* Stats */}
+            {isLoaded && semesters.length > 0 && (
+                <StatsSection semesters={semesters} />
+            )}
 
             {/* Content */}
             <section className="animate-slide-up">
