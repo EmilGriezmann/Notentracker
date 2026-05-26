@@ -99,7 +99,7 @@ export default function SemesterRadar({ subjects }: Props) {
 
     return (
         <div
-            className="w-full h-full cursor-pointer"
+            className="w-full h-full min-h-[210px] cursor-pointer"
             style={{ perspective: '800px' }}
             onClick={handleFlip}
         >

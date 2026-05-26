@@ -30,15 +30,13 @@ interface TrendPoint { name: string; avg: number }
 function TrendCard({ data }: { data: TrendPoint[] }) {
     const W = 260, H = 90;
     const padL = 28, padR = 8, padT = 8, padB = 20;
-
     const chartW = W - padL - padR;
     const chartH = H - padT - padB;
-
     const latestAvg = data.length > 0 ? data[data.length - 1].avg : null;
 
     if (data.length < 2) {
         return (
-            <div className="rounded-3xl bg-[var(--glass-bg)] border border-[var(--glass-border)] p-5 shadow-2xl">
+            <div className="col-span-2 rounded-3xl bg-[var(--glass-bg)] border border-[var(--glass-border)] p-5 shadow-2xl">
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)]">Verlauf</span>
                 <div className="flex items-center justify-center h-24 text-[var(--color-text-muted)] text-sm">
                     Mind. 2 Semester nötig
@@ -61,10 +59,8 @@ function TrendCard({ data }: { data: TrendPoint[] }) {
     const linePath = smoothLinePath(pts);
     const areaPath = linePath + ` L ${pts[pts.length - 1].x} ${H - padB} L ${pts[0].x} ${H - padB} Z`;
 
-    const yTicks = [maxVal, minVal];
-
     return (
-        <div className="rounded-3xl bg-[var(--glass-bg)] border border-[var(--glass-border)] p-5 shadow-2xl">
+        <div className="col-span-2 rounded-3xl bg-[var(--glass-bg)] border border-[var(--glass-border)] p-5 shadow-2xl">
             <div className="flex justify-between items-start mb-3">
                 <span className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)]">Verlauf</span>
                 {latestAvg !== null && (
@@ -86,44 +82,17 @@ function TrendCard({ data }: { data: TrendPoint[] }) {
                         <stop offset="100%" stopColor="#0a84ff" stopOpacity="0" />
                     </linearGradient>
                 </defs>
-
-                {/* Y-axis labels */}
-                {yTicks.map((v, i) => (
-                    <text
-                        key={i}
-                        x={padL - 5}
-                        y={toY(v)}
-                        fontSize="7.5"
-                        fill="var(--color-text-muted)"
-                        textAnchor="end"
-                        dominantBaseline="middle"
-                    >
+                {[maxVal, minVal].map((v, i) => (
+                    <text key={i} x={padL - 5} y={toY(v)} fontSize="7.5" fill="var(--color-text-muted)" textAnchor="end" dominantBaseline="middle">
                         {v.toFixed(1)}
                     </text>
                 ))}
-
-                {/* Area fill */}
                 <path d={areaPath} fill="url(#statGrad)" />
-
-                {/* Line */}
                 <path d={linePath} fill="none" stroke="#0a84ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-
-                {/* Dots */}
-                {pts.map((p, i) => (
-                    <circle key={i} cx={p.x} cy={p.y} r="3" fill="#0a84ff" />
-                ))}
-
-                {/* X-axis labels */}
+                {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3" fill="#0a84ff" />)}
                 {data.map((d, i) => (
-                    <text
-                        key={i}
-                        x={toX(i)}
-                        y={H - 4}
-                        fontSize="7.5"
-                        fill="var(--color-text-muted)"
-                        textAnchor={i === 0 ? 'start' : i === data.length - 1 ? 'end' : 'middle'}
-                        dominantBaseline="auto"
-                    >
+                    <text key={i} x={toX(i)} y={H - 4} fontSize="7.5" fill="var(--color-text-muted)"
+                        textAnchor={i === 0 ? 'start' : i === data.length - 1 ? 'end' : 'middle'} dominantBaseline="auto">
                         {d.name}
                     </text>
                 ))}
@@ -132,45 +101,43 @@ function TrendCard({ data }: { data: TrendPoint[] }) {
     );
 }
 
-// ─── Best Klausuren Card ──────────────────────────────────────────────────────
+// ─── Shared compact rank card ─────────────────────────────────────────────────
 
-interface KlausurItem {
-    subjectName: string;
-    semesterName: string;
-    quarterName: string;
-    grade: number;
+const RANK_COLORS = ['#0a84ff', '#30d158', '#ff9f0a'];
+
+interface RankItem {
+    title: string;
+    subtitle: string;
+    value: number;
+    unit: string;
 }
 
-function BestKlausurenCard({ items }: { items: KlausurItem[] }) {
-    const rankColors = ['#0a84ff', '#30d158', '#ff9f0a'];
-
+function CompactRankCard({ heading, items }: { heading: string; items: RankItem[] }) {
     return (
-        <div className="rounded-3xl bg-[var(--glass-bg)] border border-[var(--glass-border)] p-5 shadow-2xl">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-4 block">
-                Beste Klausuren
+        <div className="rounded-3xl bg-[var(--glass-bg)] border border-[var(--glass-border)] p-4 shadow-2xl">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-[var(--color-text-muted)] mb-3 block">
+                {heading}
             </span>
-            <div className="flex flex-col gap-3.5">
+            <div className="flex flex-col gap-2.5">
                 {items.map((item, i) => (
-                    <div key={i} className="flex items-center gap-3">
+                    <div key={i} className="flex items-center gap-2">
                         <div
-                            className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-white"
-                            style={{ background: rankColors[i] }}
+                            className="w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-[9px] font-bold text-white"
+                            style={{ background: RANK_COLORS[i] }}
                         >
                             {i + 1}
                         </div>
                         <div className="min-w-0 flex-1">
-                            <div className="text-sm font-semibold text-[var(--color-text)] truncate leading-tight">
-                                {item.subjectName}
+                            <div className="text-xs font-semibold text-[var(--color-text)] truncate leading-tight">
+                                {item.title}
                             </div>
-                            <div className="text-[11px] text-[var(--color-text-muted)] leading-tight">
-                                {item.semesterName} · {item.quarterName}
+                            <div className="text-[10px] text-[var(--color-text-muted)] leading-tight truncate">
+                                {item.subtitle}
                             </div>
                         </div>
                         <div className="flex-shrink-0 text-right">
-                            <span className="text-xl font-bold text-[var(--color-text)] leading-none">
-                                {item.grade}
-                            </span>
-                            <span className="text-[10px] text-[var(--color-text-muted)] ml-0.5">Pkt</span>
+                            <span className="text-base font-bold text-[var(--color-text)] leading-none">{item.value}</span>
+                            <span className="text-[9px] text-[var(--color-text-muted)] ml-0.5">{item.unit}</span>
                         </div>
                     </div>
                 ))}
@@ -181,9 +148,7 @@ function BestKlausurenCard({ items }: { items: KlausurItem[] }) {
 
 // ─── Stats Section ────────────────────────────────────────────────────────────
 
-interface Props {
-    semesters: Semester[];
-}
+interface Props { semesters: Semester[] }
 
 export default function StatsSection({ semesters }: Props) {
     const trendData = useMemo<TrendPoint[]>(() => {
@@ -197,35 +162,52 @@ export default function StatsSection({ semesters }: Props) {
         return points;
     }, [semesters]);
 
-    const bestKlausuren = useMemo<KlausurItem[]>(() => {
-        const results: KlausurItem[] = [];
+    const bestKlausuren = useMemo<RankItem[]>(() => {
+        const results: { subjectName: string; semesterName: string; quarterName: string; grade: number }[] = [];
         semesters.forEach(sem => {
-            sem.subjects
-                .filter(sub => sub.assessmentType === 'WRITTEN')
-                .forEach(sub => {
-                    sub.quarters.forEach(q => {
-                        if (q.written !== undefined && q.written !== null) {
-                            results.push({
-                                subjectName: sub.name,
-                                semesterName: sem.name,
-                                quarterName: q.name,
-                                grade: q.written,
-                            });
-                        }
-                    });
+            sem.subjects.filter(s => s.assessmentType === 'WRITTEN').forEach(sub => {
+                sub.quarters.forEach(q => {
+                    if (q.written !== undefined && q.written !== null) {
+                        results.push({ subjectName: sub.name, semesterName: sem.name, quarterName: q.name, grade: q.written });
+                    }
                 });
+            });
         });
-        return results.sort((a, b) => b.grade - a.grade).slice(0, 3);
+        return results
+            .sort((a, b) => b.grade - a.grade)
+            .slice(0, 3)
+            .map(r => ({ title: r.subjectName, subtitle: `${r.semesterName} · ${r.quarterName}`, value: r.grade, unit: 'Pkt' }));
     }, [semesters]);
 
-    if (trendData.length === 0 && bestKlausuren.length === 0) return null;
+    const bestFaecher = useMemo<RankItem[]>(() => {
+        const byName = new Map<string, { totalAvg: number; count: number }>();
+        semesters.forEach(sem => {
+            sem.subjects.forEach(sub => {
+                const avg = calculateSubjectAverage(sub);
+                if (avg === null) return;
+                const entry = byName.get(sub.name);
+                if (entry) { entry.totalAvg += avg; entry.count++; }
+                else byName.set(sub.name, { totalAvg: avg, count: 1 });
+            });
+        });
+        return Array.from(byName.entries())
+            .map(([name, { totalAvg, count }]) => ({
+                title: name,
+                subtitle: `${count} ${count === 1 ? 'Semester' : 'Semester'}`,
+                value: Math.round(totalAvg / count),
+                unit: 'Pkt',
+            }))
+            .sort((a, b) => b.value - a.value)
+            .slice(0, 3);
+    }, [semesters]);
 
-    const showBoth = trendData.length >= 2 && bestKlausuren.length > 0;
+    if (trendData.length === 0 && bestKlausuren.length === 0 && bestFaecher.length === 0) return null;
 
     return (
-        <section className={`mb-10 animate-slide-up grid gap-4 ${showBoth ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+        <section className="mb-10 animate-slide-up grid grid-cols-2 sm:grid-cols-4 gap-4">
             {trendData.length > 0 && <TrendCard data={trendData} />}
-            {bestKlausuren.length > 0 && <BestKlausurenCard items={bestKlausuren} />}
+            {bestKlausuren.length > 0 && <CompactRankCard heading="Beste Klausuren" items={bestKlausuren} />}
+            {bestFaecher.length > 0 && <CompactRankCard heading="Beste Fächer" items={bestFaecher} />}
         </section>
     );
 }
